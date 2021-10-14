@@ -1,3 +1,7 @@
+#ifdef __SWITCH__
+#	include <switch.h>
+#endif
+
 #include "pch.h"
 #include "winmain.h"
 
@@ -56,7 +60,11 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not initialize SDL2", SDL_GetError(), nullptr);
 		return 1;
 	}
+#ifndef __SWITCH__
 	BasePath = SDL_GetBasePath();
+#else
+	BasePath = (char *)"romfs:/";
+#endif
 
 	pinball::quickFlag = strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
@@ -71,12 +79,24 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		pb::FullTiltMode = true;
 	}
 
+#ifdef __SWITCH__
+	int w, h;
+	switch (appletGetOperationMode()) {
+		case AppletOperationMode_Console:
+			w = 1920, h = 1080;
+			break;
+		case AppletOperationMode_Handheld:
+			w = 1280, h = 720;
+			break;
+	}
+#endif
+
 	// SDL window
 	SDL_Window* window = SDL_CreateWindow
 	(
 		pinball::get_rc_string(38, 0),
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		800, 556,
+		w, h,
 		SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE
 	);
 	MainWindow = window;
@@ -85,6 +105,16 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Could not create window", SDL_GetError(), nullptr);
 		return 1;
 	}
+
+#ifdef __SWITCH__
+    for (int i = 0; i < 2; i++) {
+        if (SDL_JoystickOpen(i) == NULL) {
+            SDL_Log("SDL_JoystickOpen: %s\n", SDL_GetError());
+            SDL_Quit();
+            return -1;
+        }
+    }
+#endif
 
 	SDL_Renderer* renderer = SDL_CreateRenderer
 	(
@@ -111,10 +141,12 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	// ImGui_ImplSDL2_Init is private, we are not actually using ImGui OpenGl backend
 	ImGui_ImplSDL2_InitForOpenGL(window, nullptr);
 
+#ifndef __SWITCH__
 	auto prefPath = SDL_GetPrefPath(nullptr, "SpaceCadetPinball");
 	auto iniPath = std::string(prefPath) + "imgui_pb.ini";
 	io.IniFilename = iniPath.c_str();
 	SDL_free(prefPath);
+#endif
 
 	// PB init from message handler
 	{
@@ -218,7 +250,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 				float dx = (last_mouse_x - x) / static_cast<float>(w);
 				float dy = (y - last_mouse_y) / static_cast<float>(h);
 				pb::ballset(dx, dy);
-				
+
 				SDL_WarpMouseInWindow(window, last_mouse_x, last_mouse_y);
 
 				// Mouse warp does not work over remote desktop or in some VMs
@@ -246,15 +278,19 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 			if (UpdateToFrameCounter >= UpdateToFrameRatio)
 			{
+				// Hide menu on Switch since it can't be interacted with
+#ifndef __SWITCH__
 				ImGui_ImplSDL2_NewFrame();
 				ImGui::NewFrame();
 				RenderUi();
-
+#endif
 				SDL_RenderClear(renderer);
 				render::PresentVScreen();
 
+#ifndef __SWITCH__
 				ImGui::Render();
 				ImGuiSDL::Render(ImGui::GetDrawData());
+#endif
 
 				SDL_RenderPresent(renderer);
 				frameCounter++;
@@ -599,6 +635,31 @@ int winmain::event_handler(const SDL_Event* event)
 		fullscrn::shutdown();
 		return_value = 0;
 		return 0;
+	case SDL_JOYBUTTONDOWN:
+		pb::keydown(event->jbutton.button);
+		switch (event->jbutton.button) {
+			case 2: // HidNpadButton_X
+				new_game();
+				break;
+			case 3: // HidNpadButton_Y
+				pause();
+				break;
+			case 10: // HidNpadButton_Plus
+				end_pause();
+				bQuit = 1;
+				fullscrn::shutdown();
+				return_value = 0;
+				return 0;
+			case 1:
+				fullscrn::window_size_changed();
+				break;
+			default:
+				break;
+		}
+		break;
+	case SDL_JOYBUTTONUP:
+		pb::keyup(event->jbutton.button);
+		break;
 	case SDL_KEYUP:
 		pb::keyup(event->key.keysym.sym);
 		break;

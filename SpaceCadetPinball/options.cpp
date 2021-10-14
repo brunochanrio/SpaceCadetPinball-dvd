@@ -43,24 +43,35 @@ void options::init()
 		ImGui::EndFrame();
 	}
 
+#ifndef __SWITCH__
 	Options.KeyDft.LeftFlipper = SDLK_z;
 	Options.KeyDft.RightFlipper = SDLK_SLASH;
 	Options.KeyDft.Plunger = SDLK_SPACE;
 	Options.KeyDft.LeftTableBump = SDLK_x;
 	Options.KeyDft.RightTableBump = SDLK_PERIOD;
 	Options.KeyDft.BottomTableBump = SDLK_UP;
+#else
+	Options.KeyDft.LeftFlipper = 6; // HidNpadButton_L
+	Options.KeyDft.RightFlipper = 7; // HidNpadButton_R
+	Options.KeyDft.Plunger = 0; // HidNpadButton_A
+	Options.KeyDft.LeftTableBump = 12; // HidNpadButton_Left
+	Options.KeyDft.RightTableBump = 14; // HidNpadButton_Right
+	Options.KeyDft.BottomTableBump = 15; // HidNpadButton_Down
+#endif
 	Options.Key = Options.KeyDft;
 
 	Options.Sounds = get_int("Sounds", true);
 	Options.Music = get_int("Music", false);
 	Options.FullScreen = get_int("FullScreen", false);
 	Options.Players = get_int("Players", 1);
+#ifndef __SWITCH__
 	Options.Key.LeftFlipper = get_int("Left Flipper key", Options.Key.LeftFlipper);
 	Options.Key.RightFlipper = get_int("Right Flipper key", Options.Key.RightFlipper);
 	Options.Key.Plunger = get_int("Plunger key", Options.Key.Plunger);
 	Options.Key.LeftTableBump = get_int("Left Table Bump key", Options.Key.LeftTableBump);
 	Options.Key.RightTableBump = get_int("Right Table Bump key", Options.Key.RightTableBump);
 	Options.Key.BottomTableBump = get_int("Bottom Table Bump key", Options.Key.BottomTableBump);
+#endif
 	Options.UniformScaling = get_int("Uniform scaling", true);
 	ImGui::GetIO().FontGlobalScale = get_float("UI Scale", 1.0f);
 	Options.Resolution = get_int("Screen Resolution", -1);

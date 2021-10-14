@@ -271,8 +271,17 @@ __pycache__/
 
 #CMake generated
 out/
+CMakeFiles/
 /cmake-build-debug
 
 # Windows XP stuff
 DebugWinXp/
 ReleaseWinXp/
+
+.vscode/
+res/
+build/
+
+*.nacp
+*.nro
+Icon_1.jpg
