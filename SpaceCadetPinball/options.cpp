@@ -61,17 +61,17 @@ void options::init()
 	Options.Key = Options.KeyDft;
 
 	Options.Sounds = get_int("Sounds", true);
-	Options.Music = get_int("Music", false);
+	Options.Music = get_int("Music", true);
 	Options.FullScreen = get_int("FullScreen", false);
 	Options.Players = get_int("Players", 1);
-#ifndef __SWITCH__
+
 	Options.Key.LeftFlipper = get_int("Left Flipper key", Options.Key.LeftFlipper);
 	Options.Key.RightFlipper = get_int("Right Flipper key", Options.Key.RightFlipper);
 	Options.Key.Plunger = get_int("Plunger key", Options.Key.Plunger);
 	Options.Key.LeftTableBump = get_int("Left Table Bump key", Options.Key.LeftTableBump);
 	Options.Key.RightTableBump = get_int("Right Table Bump key", Options.Key.RightTableBump);
 	Options.Key.BottomTableBump = get_int("Bottom Table Bump key", Options.Key.BottomTableBump);
-#endif
+
 	Options.UniformScaling = get_int("Uniform scaling", true);
 	ImGui::GetIO().FontGlobalScale = get_float("UI Scale", 1.0f);
 	Options.Resolution = get_int("Screen Resolution", -1);

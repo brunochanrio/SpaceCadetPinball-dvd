@@ -67,11 +67,9 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 #endif
 
 	pinball::quickFlag = strstr(lpCmdLine, "-quick") != nullptr;
-	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
 
 	/*Check for full tilt .dat file and switch to it automatically*/
-	auto cadetFilePath = pinball::make_path_name("CADET.DAT");
-	auto cadetDat = fopen(cadetFilePath.c_str(), "r");
+	auto cadetDat = fopen("CADET.DAT", "r");
 	if (cadetDat)
 	{
 		fclose(cadetDat);
@@ -141,16 +139,14 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	// ImGui_ImplSDL2_Init is private, we are not actually using ImGui OpenGl backend
 	ImGui_ImplSDL2_InitForOpenGL(window, nullptr);
 
-#ifndef __SWITCH__
-	auto prefPath = SDL_GetPrefPath(nullptr, "SpaceCadetPinball");
-	auto iniPath = std::string(prefPath) + "imgui_pb.ini";
-	io.IniFilename = iniPath.c_str();
-	SDL_free(prefPath);
-#endif
+	io.IniFilename = "imgui_pb.ini";
 
 	// PB init from message handler
 	{
 		options::init();
+
+		DatFileName = options::get_string("Pinball Data", "romfs:/PINBALL.DAT");
+
 		if (!Sound::Init(Options.SoundChannels, Options.Sounds))
 			Options.Sounds = false;
 

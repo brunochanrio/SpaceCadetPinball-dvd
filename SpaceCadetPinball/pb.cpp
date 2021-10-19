@@ -39,7 +39,7 @@ int pb::init()
 {
 	float projMat[12], zMin = 0, zScaler = 0;
 
-	auto dataFilePath = pinball::make_path_name(winmain::DatFileName);
+	auto dataFilePath = winmain::DatFileName;
 	record_table = partman::load_records(dataFilePath.c_str(), FullTiltMode);
 
 	auto useBmpFont = 0;
