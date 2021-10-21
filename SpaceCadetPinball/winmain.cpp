@@ -62,7 +62,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		if (!Sound::Init(Options.SoundChannels, Options.Sounds))
 			Options.Sounds = false;
 
-		if (!pinball::quickFlag && !midi::music_init())
+		if (!pinball::quickFlag)
 			Options.Music = false;
 
 		if (pb::init())

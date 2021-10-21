@@ -1,14 +1,17 @@
 #include "pch.h"
 #include "Sound.h"
 
+#include "wii_sound.h"
+
 int Sound::num_channels;
 bool Sound::enabled_flag = false;
-int* Sound::TimeStamps = nullptr;
+int *Sound::TimeStamps = nullptr;
 
 bool Sound::Init(int channels, bool enableFlag)
 {
 	Mix_Init(MIX_INIT_OGG);
 	auto result = Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
+	wii_sound::Initialize();
 	SetChannels(channels);
 	Enable(enableFlag);
 	return !result;
@@ -16,9 +19,15 @@ bool Sound::Init(int channels, bool enableFlag)
 
 void Sound::Enable(bool enableFlag)
 {
+	if (enabled_flag == enableFlag)
+		return;
 	enabled_flag = enableFlag;
+
 	if (!enableFlag)
+	{
 		Mix_HaltChannel(-1);
+		wii_sound::StopMusic();
+	}
 }
 
 void Sound::Activate()
@@ -37,9 +46,10 @@ void Sound::Close()
 	TimeStamps = nullptr;
 	Mix_CloseAudio();
 	Mix_Quit();
+	wii_sound::StopMusic();
 }
 
-void Sound::PlaySound(Mix_Chunk* wavePtr, int time)
+void Sound::PlaySound(Mix_Chunk *wavePtr, int time)
 {
 	if (wavePtr && enabled_flag)
 	{
@@ -55,7 +65,7 @@ void Sound::PlaySound(Mix_Chunk* wavePtr, int time)
 	}
 }
 
-Mix_Chunk* Sound::LoadWaveFile(const std::string& lpName)
+Mix_Chunk *Sound::LoadWaveFile(const std::string &lpName)
 {
 	auto wavFile = fopen(lpName.c_str(), "r");
 	if (!wavFile)
@@ -65,7 +75,7 @@ Mix_Chunk* Sound::LoadWaveFile(const std::string& lpName)
 	return Mix_LoadWAV(lpName.c_str());
 }
 
-void Sound::FreeSound(Mix_Chunk* wave)
+void Sound::FreeSound(Mix_Chunk *wave)
 {
 	if (wave)
 		Mix_FreeChunk(wave);
