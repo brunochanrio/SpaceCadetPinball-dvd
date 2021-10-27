@@ -30,8 +30,8 @@ public:
 	static void window_size(int* width, int* height);
 	static void pause_continue();
 	static void loose_focus();
-	static void keyup(uint32_t wiiButton, uint32_t gcButton);
-	static void keydown(uint32_t wiiButton, uint32_t gcButton);
+	static void keyup(uint32_t buttons);
+	static void keydown(uint32_t buttons);
 	static int mode_countdown(float time);
 	static void launch_ball();
 	static void end_game();

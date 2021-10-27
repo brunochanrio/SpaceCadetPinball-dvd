@@ -277,7 +277,8 @@ out/
 DebugWinXp/
 ReleaseWinXp/
 
-# Wii
+# 3DS
 build/
 *.elf
-*.dol
+*.3dsx
+*.smdh

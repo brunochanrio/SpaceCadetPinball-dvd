@@ -360,41 +360,41 @@ void pb::loose_focus()
 		MainTable->Message(1010, time_now);
 }
 
-void pb::keyup(uint32_t wiiButton, uint32_t gcButton)
+void pb::keyup(uint32_t buttons)
 {
 	if (game_mode != 1 || winmain::single_step || demo_mode)
 		return;
 
-	if ((wiiButton & WPAD_NUNCHUK_BUTTON_Z) || (gcButton & PAD_TRIGGER_L))
+	if (buttons & KEY_L)
 	{
 		MainTable->Message(1001, time_now);
 	}
 
-	if ((wiiButton & WPAD_BUTTON_B) || (gcButton & PAD_TRIGGER_R))
+	if (buttons & KEY_R)
 	{
 		MainTable->Message(1003, time_now);
 	}
 
-	if ((wiiButton & WPAD_BUTTON_A) || (gcButton & PAD_BUTTON_A))
+	if (buttons & KEY_A)
 	{
 		MainTable->Message(1005, time_now);
 	}
 
-	if ((wiiButton & WPAD_BUTTON_RIGHT) || (gcButton & PAD_BUTTON_RIGHT))
+	if (buttons & KEY_DRIGHT)
 	{
 		nudge::un_nudge_right(0, nullptr);
 	}
-	else if ((wiiButton & WPAD_BUTTON_LEFT) || (gcButton & PAD_BUTTON_LEFT))
+	else if (buttons & KEY_DLEFT)
 	{
 		nudge::un_nudge_left(0, nullptr);
 	}
-	else if ((wiiButton & WPAD_BUTTON_UP) || (gcButton & PAD_BUTTON_UP))
+	else if (buttons & KEY_DUP)
 	{
 		nudge::un_nudge_up(0, nullptr);
 	}
 }
 
-void pb::keydown(uint32_t wiiButton, uint32_t gcButton)
+void pb::keydown(uint32_t buttons)
 {
 	if (winmain::single_step || demo_mode)
 		return;
@@ -407,34 +407,34 @@ void pb::keydown(uint32_t wiiButton, uint32_t gcButton)
 
 	// control::pbctrl_bdoor_controller(static_cast<char>(key));
 
-	if ((wiiButton & WPAD_NUNCHUK_BUTTON_Z) || (gcButton & PAD_TRIGGER_L))
+	if (buttons & KEY_L)
 	{
 		MainTable->Message(1000, time_now);
 	}
 
-	if ((wiiButton & WPAD_BUTTON_B) || (gcButton & PAD_TRIGGER_R))
+	if (buttons & KEY_R)
 	{
 		MainTable->Message(1002, time_now);
 	}
 
-	if ((wiiButton & WPAD_BUTTON_A) || (gcButton & PAD_BUTTON_A))
+	if (buttons & KEY_A)
 	{
 		MainTable->Message(1004, time_now);
 	}
 
-	if ((wiiButton & WPAD_BUTTON_RIGHT) || (gcButton & PAD_BUTTON_RIGHT))
+	if (buttons & KEY_DRIGHT)
 	{
 		if (!MainTable->TiltLockFlag)
 			nudge::nudge_right();
 	}
 
-	if ((wiiButton & WPAD_BUTTON_LEFT) || (gcButton & PAD_BUTTON_LEFT))
+	if (buttons & KEY_DLEFT)
 	{
 		if (!MainTable->TiltLockFlag)
 			nudge::nudge_left();
 	}
 
-	if ((wiiButton & WPAD_BUTTON_UP) || (gcButton & PAD_BUTTON_UP))
+	if (buttons & KEY_DUP)
 	{
 		if (!MainTable->TiltLockFlag)
 			nudge::nudge_up();

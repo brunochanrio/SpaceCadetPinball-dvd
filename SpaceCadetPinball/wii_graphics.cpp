@@ -1,230 +1,328 @@
 #include "wii_graphics.h"
 
 #include <cstdio>
+#include <string>
 #include <cstring>
 #include <malloc.h>
 
-// #include "ogc/conf.h"
+#include "vshader_shbin.h"
 
-void *wii_graphics::gpFifo = nullptr;
-void *wii_graphics::frameBuffer[2] = {nullptr, nullptr};
-GXRModeObj *wii_graphics::rmode = nullptr;
-uint32_t wii_graphics::currentFramebuffer = 0;
+C3D_RenderTarget *wii_graphics::target = nullptr;
+
+DVLB_s *wii_graphics::vshader_dvlb = nullptr;
+shaderProgram_s wii_graphics::program = {};
+int wii_graphics::uLoc_projection = 0;
+int wii_graphics::uLoc_modelView = 0;
+C3D_Mtx wii_graphics::projection = {};
+void *wii_graphics::vbo_data = nullptr;
+
+C3D_Tex wii_graphics::textureObject = {};
+uint8_t *wii_graphics::textureData = nullptr;
+
+
+
+uint32_t frame = 0;
+
+typedef struct
+{
+    float position[3];
+    float texcoord[2];
+} vertex;
+
+static const vertex vertex_list[] =
+{
+    {{100.0f, 200.0f, 0.5f}, {0.0f, 0.0f}},
+    {{100.0f, 40.0f, 0.5f}, {0.0f, 1.0f}},
+    {{300.0f, 200.0f, 0.5f}, {1.0f, 0.0f}},
+    {{300.0f, 40.0f, 0.5f}, {1.0f, 1.0f}}
+};
+
+#define vertex_list_count (sizeof(vertex_list) / sizeof(vertex_list[0]))
 
 void wii_graphics::Initialize()
 {
-    // Init the vi
+    // Initialize graphics
 
-    VIDEO_Init();
+    gfxInitDefault();
+    C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
-    // Get video mode and allocate 2 framebuffers
+    // Initialize the render target
 
-    rmode = VIDEO_GetPreferredMode(NULL);
-    printf("Framebuffer: %ux%u", rmode->fbWidth, rmode->efbHeight);
-    printf("VI: %ux%u", rmode->viWidth, rmode->viHeight);
-    printf("TV Mode: %u", rmode->viTVMode);
-    printf("XFB Mode: %u", rmode->xfbMode);
-    printf("XFB Height: %u", rmode->xfbHeight);
-    printf("Antialiasing: %u", rmode->aa);
-    printf("Field rendering: %u", rmode->field_rendering);
+    target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+    C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
-    frameBuffer[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
-    frameBuffer[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
-    currentFramebuffer = 0;
+    // Load the vertex shader, create a shader program and bind it
 
-    // if (CONF_GetAspectRatio() == CONF_ASPECT_16_9)
-    // {
-    //     rmode->viWidth = 600;
-    // }
-    // else
-    // {
-    //     rmode->viWidth = 600;
-    // }
+    vshader_dvlb = DVLB_ParseFile((u32 *)vshader_shbin, vshader_shbin_size);
+    shaderProgramInit(&program);
+    shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
+    C3D_BindProgram(&program);
 
-    // if (rmode == &TVPal576IntDfScale || rmode == &TVPal576ProgScale)
-    // {
-    //     rmode->viXOrigin = (VI_MAX_WIDTH_PAL - rmode->viWidth) / 2;
-    //     rmode->viYOrigin = (VI_MAX_HEIGHT_PAL - rmode->viHeight) / 2;
-    // }
-    // else
-    // {
-    //     rmode->viXOrigin = (VI_MAX_WIDTH_NTSC - rmode->viWidth) / 2;
-    //     rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) / 2;
-    // }
+    // Get the location of the uniforms
 
-    rmode->viWidth = 640;
-    rmode->viHeight = 448;
-    rmode->fbWidth = 640;
-    rmode->efbHeight = 448;
-    rmode->xfbHeight = 448;
-    rmode->viXOrigin = (VI_MAX_WIDTH_NTSC - rmode->viWidth) >> 1;
-    rmode->viYOrigin = (VI_MAX_HEIGHT_NTSC - rmode->viHeight) >> 1;
+    uLoc_projection = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
+    uLoc_modelView = shaderInstanceGetUniformLocation(program.vertexShader, "modelView");
 
-    // Set some video properties
+    // Configure attributes for use with the vertex shader
 
-    VIDEO_Configure(rmode);
-    VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
-    VIDEO_SetBlack(FALSE);
-    VIDEO_Flush();
-    VIDEO_WaitVSync();
-    if (rmode->viTVMode & VI_NON_INTERLACE)
-        VIDEO_WaitVSync();
+    C3D_AttrInfo *attrInfo = C3D_GetAttrInfo();
+    AttrInfo_Init(attrInfo);
+    AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0=position
+    AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
 
-    // Setup the fifo and then init the flipper
+    // Compute the projection matrix
 
-    gpFifo = memalign(32, FIFO_SIZE);
-    memset(gpFifo, 0, FIFO_SIZE);
+    Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0, true);
 
-    GX_Init(gpFifo, FIFO_SIZE);
+    // Create the VBO (vertex buffer object)
 
-    // Set some initial graphics state
+    vbo_data = linearAlloc(sizeof(vertex_list));
+    memcpy(vbo_data, vertex_list, sizeof(vertex_list));
 
-    GXColor clearColor = {0, 0, 0, 255};
-    GX_SetCopyClear(clearColor, GX_MAX_Z24);
+    // Configure buffers
 
-    float yscale = GX_GetYScaleFactor(rmode->efbHeight, rmode->xfbHeight);
-    uint32_t xfbHeight = GX_SetDispCopyYScale(yscale);
+    C3D_BufInfo *bufInfo = C3D_GetBufInfo();
+    BufInfo_Init(bufInfo);
+    BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 2, 0x10);
 
-    GX_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
-    GX_SetScissor(0, 0, rmode->fbWidth, rmode->efbHeight);
-    GX_SetDispCopySrc(0, 0, rmode->fbWidth, rmode->efbHeight);
-    GX_SetDispCopyDst(rmode->fbWidth, xfbHeight);
-    GX_SetCopyFilter(rmode->aa, rmode->sample_pattern, GX_TRUE, rmode->vfilter);
-    GX_SetFieldMode(rmode->field_rendering, ((rmode->viHeight == 2 * rmode->xfbHeight) ? GX_ENABLE : GX_DISABLE));
+    // Load the texture and bind it to the first texture unit
 
-    // if (rmode->aa)
-    //     GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
-    // else
-    //     GX_SetPixelFmt(GX_PF_RGB8_Z24, GX_ZC_LINEAR);
+    uint32_t textureSize = 8*8*4;// GetTextureSize(8, 8, GPU_RGBA8, 0);
+    textureData = (uint8_t *)linearAlloc(textureSize);
 
-    GX_SetCullMode(GX_CULL_BACK);
-    GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
-    GX_SetDispCopyGamma(GX_GM_1_0);
-    GX_SetZMode(GX_TRUE, GX_LEQUAL, GX_TRUE);
-    GX_SetColorUpdate(GX_TRUE);
+    for (uint32_t i = 0; i < textureSize; i += 4)
+    {
+        textureData[i + 0] = 0xff;
+        textureData[i + 1] = 0x00;
+        textureData[i + 2] = 0x00;
+        textureData[i + 3] = 0xff;
+    }
 
-    // Texture and TEV configuration
+    CreateTextureObject(&textureObject, textureData, 8, 8, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
+    LoadTextureObject(&textureObject, 0);
 
-    GX_SetNumChans(1);
-    GX_SetNumTexGens(1);
+    // Configure the first fragment shading substage to just pass through the vertex color
+    // See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
 
-    GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
-    //GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
-    //GX_SetTevOp(GX_TEVSTAGE0, GX_PASSCLR);
-    GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
-    GX_SetTevOp(GX_TEVSTAGE0, GX_REPLACE);
+    C3D_TexEnv *env = C3D_GetTexEnv(0);
+    C3D_TexEnvInit(env);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
 }
 
-void wii_graphics::LoadOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far)
+void wii_graphics::Dispose()
 {
-    Mtx44 projectionMatrix;
-    guOrtho(projectionMatrix, top, bottom, left, right, near, far);
-    GX_LoadProjectionMtx(projectionMatrix, GX_ORTHOGRAPHIC);
+    // Free texture
+    C3D_TexDelete(&textureObject);
+    linearFree(textureData);
+
+    // Free the VBO
+
+    linearFree(vbo_data);
+
+    // Free the shader program
+
+    shaderProgramFree(&program);
+    DVLB_Free(vshader_dvlb);
+
+    // Deinitialize graphics
+
+    C3D_Fini();
+    gfxExit();
 }
 
-void wii_graphics::Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y)
+void wii_graphics::Render()
 {
-    Mtx modelMatrix;
-    guMtxIdentity(modelMatrix);
-    guMtxTransApply(modelMatrix, modelMatrix, x, y, -5.0f);
+    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    C3D_RenderTargetClear(target, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+    C3D_FrameDrawOn(target);
 
-    Mtx viewMatrix;
-    guVector cam = {0.0F, 0.0F, 0.0F};
-    guVector up = {0.0F, 1.0F, 0.0F};
-    guVector look = {0.0F, 0.0F, -1.0F};
-    guLookAt(viewMatrix, &cam, &up, &look);
+    // Update the uniforms
 
-    Mtx modelViewMatrix;
-    guMtxConcat(viewMatrix, modelMatrix, modelViewMatrix);
-    GX_LoadPosMtxImm(modelViewMatrix, matrixIndex);
+    C3D_Mtx modelView;
+    Mtx_Identity(&modelView);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
 
-    GX_SetCurrentMtx(matrixIndex);
+    // Update texture
+
+    for (uint32_t i = 0; i < 8*8*4; i += 4)
+    {
+        textureData[i + 0] = 0xff;
+        textureData[i + 1] = (frame << 2) & 0xFF;
+        textureData[i + 2] = 0x00;
+        textureData[i + 3] = 0xff;
+    }
+
+    frame++;
+
+    C3D_TexUpload(&textureObject, textureData);
+    //C3D_TexFlush(&textureObject);
+
+    // Draw the VBO
+    C3D_DrawArrays(GPU_TRIANGLE_STRIP, 0, vertex_list_count);
+
+    C3D_FrameEnd(0);
 }
 
-uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right, float uvTop, float uvBottom, float uvLeft, float uvRight)
+bool wii_graphics::IsMainLoop()
 {
-    // Configure vertex formats
-
-    GX_ClearVtxDesc();
-    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-    //GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
-    GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
-
-    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-    //GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGB8, 0);
-    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
-
-    memset(displayList, 0, MAX_DISPLAY_LIST_SIZE);
-
-    // Invalidate vertex cache
-
-    GX_InvVtxCache();
-
-    // It's necessary to flush the data cache of the display list
-    // just before filling it.
-
-    DCInvalidateRange(displayList, MAX_DISPLAY_LIST_SIZE);
-
-    // Start generating the display list
-
-    GX_BeginDispList(displayList, MAX_DISPLAY_LIST_SIZE);
-
-    GX_Begin(GX_TRIANGLESTRIP, GX_VTXFMT0, 4);
-    GX_Position3f32(left, top, 0.0f);
-    //GX_Color3f32(1.0f, 0.0f, 0.0f);
-    GX_TexCoord2f32(uvLeft, uvTop);
-
-    GX_Position3f32(right, top, 0.0f);
-    //GX_Color3f32(0.0f, 1.0f, 0.0f);
-    GX_TexCoord2f32(uvRight, uvTop);
-
-    GX_Position3f32(left, bottom, 0.0f);
-    //GX_Color3f32(0.0f, 0.0f, 1.0f);
-    GX_TexCoord2f32(uvLeft, uvBottom);
-
-    GX_Position3f32(right, bottom, 0.0f);
-    //GX_Color3f32(1.0f, 1.0f, 1.0f);
-    GX_TexCoord2f32(uvRight, uvBottom);
-
-    GX_End();
-
-    return GX_EndDispList();
+    return aptMainLoop();
 }
 
-void wii_graphics::CallDisplayList(void *displayList, uint32_t displayListSize)
+// void wii_graphics::LoadOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far)
+// {
+//     Mtx44 projectionMatrix;
+//     guOrtho(projectionMatrix, top, bottom, left, right, near, far);
+//     GX_LoadProjectionMtx(projectionMatrix, GX_ORTHOGRAPHIC);
+// }
+
+// void wii_graphics::Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y)
+// {
+//     Mtx modelMatrix;
+//     guMtxIdentity(modelMatrix);
+//     guMtxTransApply(modelMatrix, modelMatrix, x, y, -5.0f);
+
+//     Mtx viewMatrix;
+//     guVector cam = {0.0F, 0.0F, 0.0F};
+//     guVector up = {0.0F, 1.0F, 0.0F};
+//     guVector look = {0.0F, 0.0F, -1.0F};
+//     guLookAt(viewMatrix, &cam, &up, &look);
+
+//     Mtx modelViewMatrix;
+//     guMtxConcat(viewMatrix, modelMatrix, modelViewMatrix);
+//     GX_LoadPosMtxImm(modelViewMatrix, matrixIndex);
+
+//     GX_SetCurrentMtx(matrixIndex);
+// }
+
+// uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right, float uvTop, float uvBottom, float uvLeft, float uvRight)
+// {
+//     // Configure vertex formats
+
+//     GX_ClearVtxDesc();
+//     GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+//     //GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+//     GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+
+//     GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+//     //GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGB8, 0);
+//     GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+
+//     memset(displayList, 0, MAX_DISPLAY_LIST_SIZE);
+
+//     // Invalidate vertex cache
+
+//     GX_InvVtxCache();
+
+//     // It's necessary to flush the data cache of the display list
+//     // just before filling it.
+
+//     DCInvalidateRange(displayList, MAX_DISPLAY_LIST_SIZE);
+
+//     // Start generating the display list
+
+//     GX_BeginDispList(displayList, MAX_DISPLAY_LIST_SIZE);
+
+//     GX_Begin(GX_TRIANGLESTRIP, GX_VTXFMT0, 4);
+//     GX_Position3f32(left, top, 0.0f);
+//     //GX_Color3f32(1.0f, 0.0f, 0.0f);
+//     GX_TexCoord2f32(uvLeft, uvTop);
+
+//     GX_Position3f32(right, top, 0.0f);
+//     //GX_Color3f32(0.0f, 1.0f, 0.0f);
+//     GX_TexCoord2f32(uvRight, uvTop);
+
+//     GX_Position3f32(left, bottom, 0.0f);
+//     //GX_Color3f32(0.0f, 0.0f, 1.0f);
+//     GX_TexCoord2f32(uvLeft, uvBottom);
+
+//     GX_Position3f32(right, bottom, 0.0f);
+//     //GX_Color3f32(1.0f, 1.0f, 1.0f);
+//     GX_TexCoord2f32(uvRight, uvBottom);
+
+//     GX_End();
+
+//     return GX_EndDispList();
+// }
+
+// void wii_graphics::CallDisplayList(void *displayList, uint32_t displayListSize)
+// {
+//     GX_CallDispList(displayList, displayListSize);
+// }
+
+void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint8_t *textureData, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
 {
-    GX_CallDispList(displayList, displayListSize);
+    bool success = C3D_TexInit(textureObject, width, height, format);
+
+    if (!success)
+    {
+        std::string message = "Error creating texture object.";
+        svcOutputDebugString(message.c_str(), message.length());
+    }
+
+    C3D_TexUpload(textureObject, textureData);
+    C3D_TexSetFilter(textureObject, filter, filter);
+    C3D_TexSetWrap(textureObject, wrap, wrap);
+
+    //GX_InvalidateTexAll();
+
+    //GX_InitTexObj(textureObject, textureData, width, height, format, wrap, wrap, GX_FALSE);
+    //GX_InitTexObjFilterMode(textureObject, filter, filter);
 }
 
-void wii_graphics::CreateTextureObject(GXTexObj *textureObject, uint8_t *textureData, uint16_t width, uint16_t height, uint32_t format, uint8_t wrap, uint8_t filter)
+void wii_graphics::LoadTextureObject(C3D_Tex *textureObject, int32_t mapIndex)
 {
-    GX_InvalidateTexAll();
-
-    GX_InitTexObj(textureObject, textureData, width, height, format, wrap, wrap, GX_FALSE);
-    GX_InitTexObjFilterMode(textureObject, filter, filter);
+    C3D_TexBind(mapIndex, textureObject);
 }
 
-void wii_graphics::LoadTextureObject(GXTexObj *textureObject, uint8_t mapIndex)
+uint32_t wii_graphics::GetTextureSize(uint16_t width, uint16_t height, GPU_TEXCOLOR format, int32_t maxLevel)
 {
-    GX_LoadTexObj(textureObject, mapIndex);
+    uint32_t size = 0;
+
+    switch (format)
+    {
+    case GPU_RGBA8:
+        size = 32;
+        break;
+    case GPU_RGB8:
+        size = 24;
+        break;
+    case GPU_RGBA5551:
+    case GPU_RGB565:
+    case GPU_RGBA4:
+    case GPU_LA8:
+    case GPU_HILO8:
+        size = 16;
+        break;
+    case GPU_L8:
+    case GPU_A8:
+    case GPU_LA4:
+    case GPU_ETC1A4:
+        size = 8;
+        break;
+    case GPU_L4:
+    case GPU_A4:
+    case GPU_ETC1:
+        size = 4;
+        break;
+    }
+
+    size *= (uint32_t)width * height / 8;
+    return C3D_TexCalcTotalSize(size, maxLevel);
 }
 
-uint32_t wii_graphics::GetTextureSize(uint16_t width, uint16_t height, uint32_t format, uint8_t mipmap, uint8_t maxlod)
-{
-    return GX_GetTexBufferSize(width, height, format, mipmap, maxlod);
-}
+// void wii_graphics::FlushDataCache(void *startAddress, uint32_t size)
+// {
+//     DCFlushRange(startAddress, size);
+// }
 
-void wii_graphics::FlushDataCache(void *startAddress, uint32_t size)
-{
-    DCFlushRange(startAddress, size);
-}
-
-void wii_graphics::SwapBuffers()
-{
-    GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
-    GX_DrawDone();
-    VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
-    VIDEO_Flush();
-    VIDEO_WaitVSync();
-    currentFramebuffer ^= 1;
-}
+// void wii_graphics::SwapBuffers()
+// {
+//     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
+//     GX_DrawDone();
+//     VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
+//     VIDEO_Flush();
+//     VIDEO_WaitVSync();
+//     currentFramebuffer ^= 1;
+// }
