@@ -26,7 +26,7 @@ public:
     static void BeginRender();
     static void FinishRender();
     static bool IsMainLoopRunning();
-    static void SetOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far);
+    static void SetOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far);
     static void SetModelViewMatrix(float x, float y, float w, float h);
     static void DrawQuad();
     // static void Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y);

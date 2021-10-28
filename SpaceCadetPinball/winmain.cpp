@@ -113,7 +113,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// Set the projection matrix according to screen texture resolution
 
-	wii_graphics::SetOrthoProjectionMatrix(render::vscreen->Width, 0, 0, render::vscreen->Height, 0.1f, 1.0f);
+	wii_graphics::SetOrthoProjectionMatrix(0, render::vscreen->Width, 0, render::vscreen->Height, 0.1f, 1.0f);
 
 	// Create quad display list for the board and for the side bar
 
@@ -198,31 +198,47 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			//GX_InvalidateTexAll();
 
 			uint32_t dstOffset = 0;
+			uint32_t widthCount = 0;
+			constexpr uint8_t blockSize = 8;
 
-			for (int32_t y = 0; y < render::vscreen->Height; y += 4)
+			for (int32_t y = 0; y < render::vscreen->Height; y += blockSize)
 			{
-				for (int32_t x = 0; x < render::vscreen->Width; x += 4)
+				for (int32_t x = 0; x < render::vscreen->Width; x += blockSize)
 				{
-					for (uint32_t ty = 0; ty < 4; ty++)
+					for (uint8_t ty = 0; ty < blockSize; ty++)
 					{
-						for (uint32_t tx = 0; tx < 4; tx++)
+						for (uint8_t tx = 0; tx < blockSize; tx++)
 						{
 							Rgba color = render::vscreen->BmpBufPtr1[(y + ty) * render::vscreen->Width + (x + tx)].rgba;
 
-							textureData[dstOffset] = color.Alpha;
-							dstOffset++;
+							textureData[dstOffset + 0] = color.Alpha;
+							textureData[dstOffset + 1] = color.Blue;
+							textureData[dstOffset + 2] = color.Green;
+							textureData[dstOffset + 3] = color.Red;
+							dstOffset += 4;
+							widthCount += 4;
 
-							textureData[dstOffset] = color.Red;
-							dstOffset += 31;
+							if (widthCount == static_cast<uint32_t>(render::vscreen->Width) * 4)
+							{
+								dstOffset += (texWidth - render::vscreen->Width) * 4;
+								widthCount = 0;
+							}
+							// 	dstOffset += 32;
 
-							textureData[dstOffset] = color.Green;
-							dstOffset++;
+							// textureData[dstOffset] = color.Alpha;
+							// dstOffset++;
 
-							textureData[dstOffset] = color.Blue;
-							dstOffset -= 31;
+							// textureData[dstOffset] = color.Red;
+							// dstOffset += 31;
 
-							if ((dstOffset & 31) == 0)
-								dstOffset += 32;
+							// textureData[dstOffset] = color.Green;
+							// dstOffset++;
+
+							// textureData[dstOffset] = color.Blue;
+							// dstOffset -= 31;
+
+							// if ((dstOffset & 31) == 0)
+							// 	dstOffset += 32;
 						}
 					}
 				}
@@ -236,10 +252,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			// 	{
 			// 		Rgba color = render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba;
 
-			// 		textureData[dstOffset + 3] = color.Red;
-			// 		textureData[dstOffset + 2] = color.Green;
-			// 		textureData[dstOffset + 1] = color.Blue;
 			// 		textureData[dstOffset + 0] = color.Alpha;
+			// 		textureData[dstOffset + 1] = color.Blue;
+			// 		textureData[dstOffset + 2] = color.Green;
+			// 		textureData[dstOffset + 3] = color.Red;
 			// 		dstOffset += 4;
 			// 	}
 
@@ -255,7 +271,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		wii_graphics::BeginRender();
 
-		wii_graphics::SetModelViewMatrix(0, 0, 300, 240);
+		wii_graphics::SetModelViewMatrix(0, 0, render::vscreen->Width, render::vscreen->Height);
 		wii_graphics::DrawQuad();
 		// wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, render::get_offset_x(), render::get_offset_y());
 		// wii_graphics::CallDisplayList(boardDisplayList, boardDisplayListSize);

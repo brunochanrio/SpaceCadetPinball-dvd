@@ -24,10 +24,10 @@ typedef struct
 
 static const vertex vertex_list[] =
 {
-    {{0.0f, 1.0f, 0.5f}, {0.0f, 0.0f}},
-    {{0.0f, 0.0f, 0.5f}, {0.0f, 1.0f}},
-    {{1.0f, 1.0f, 0.5f}, {1.0f, 0.0f}},
-    {{1.0f, 0.0f, 0.5f}, {1.0f, 1.0f}}
+    {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}},
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+    {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}
 };
 
 #define vertex_list_count (sizeof(vertex_list) / sizeof(vertex_list[0]))
@@ -113,12 +113,12 @@ void wii_graphics::FinishRender()
     C3D_FrameEnd(0);
 }
 
-bool wii_graphics::IsMainLoop()
+bool wii_graphics::IsMainLoopRunning()
 {
     return aptMainLoop();
 }
 
-void wii_graphics::SetOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far)
+void wii_graphics::SetOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
 {
     Mtx_OrthoTilt(&projection, left, right, bottom, top, near, far, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
@@ -128,7 +128,7 @@ void wii_graphics::SetModelViewMatrix(float x, float y, float w, float h)
 {
     C3D_Mtx modelView;
     Mtx_Identity(&modelView);
-    Mtx_Translate(&modelView, x, y, 0.0f, false);
+    Mtx_Translate(&modelView, x, y, 0.5f, false);
     Mtx_Scale(&modelView, w, h, 1.0f);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
 }
