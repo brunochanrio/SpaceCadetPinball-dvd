@@ -11,8 +11,9 @@ C3D_RenderTarget *wii_graphics::target = nullptr;
 
 DVLB_s *wii_graphics::vshader_dvlb = nullptr;
 shaderProgram_s wii_graphics::program = {};
-int wii_graphics::uLoc_projection = 0;
-int wii_graphics::uLoc_modelView = 0;
+int8_t wii_graphics::uLoc_projection = 0;
+int8_t wii_graphics::uLoc_modelView = 0;
+int8_t wii_graphics::uLoc_uvOffset = 0;
 C3D_Mtx wii_graphics::projection = {};
 void *wii_graphics::vbo_data = nullptr;
 
@@ -55,6 +56,7 @@ void wii_graphics::Initialize()
 
     uLoc_projection = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
     uLoc_modelView = shaderInstanceGetUniformLocation(program.vertexShader, "modelView");
+    uLoc_uvOffset = shaderInstanceGetUniformLocation(program.vertexShader, "uvOffset");
 
     // Configure attributes for use with the vertex shader
 
@@ -133,84 +135,12 @@ void wii_graphics::SetModelViewMatrix(float x, float y, float w, float h)
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
 }
 
-void wii_graphics::DrawQuad()
+void wii_graphics::DrawQuad(float x, float y, float w, float h, float uvX, float uvY, float uvW, float uvH)
 {
+    SetModelViewMatrix(x, y, w, h);
+    C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_uvOffset, uvX, uvY, uvW, uvH);
     C3D_DrawArrays(GPU_TRIANGLE_STRIP, 0, vertex_list_count);
 }
-
-// void wii_graphics::Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y)
-// {
-//     Mtx modelMatrix;
-//     guMtxIdentity(modelMatrix);
-//     guMtxTransApply(modelMatrix, modelMatrix, x, y, -5.0f);
-
-//     Mtx viewMatrix;
-//     guVector cam = {0.0F, 0.0F, 0.0F};
-//     guVector up = {0.0F, 1.0F, 0.0F};
-//     guVector look = {0.0F, 0.0F, -1.0F};
-//     guLookAt(viewMatrix, &cam, &up, &look);
-
-//     Mtx modelViewMatrix;
-//     guMtxConcat(viewMatrix, modelMatrix, modelViewMatrix);
-//     GX_LoadPosMtxImm(modelViewMatrix, matrixIndex);
-
-//     GX_SetCurrentMtx(matrixIndex);
-// }
-
-// uint32_t wii_graphics::Create2DQuadDisplayList(void *displayList, float top, float bottom, float left, float right, float uvTop, float uvBottom, float uvLeft, float uvRight)
-// {
-//     // Configure vertex formats
-
-//     GX_ClearVtxDesc();
-//     GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-//     //GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
-//     GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
-
-//     GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-//     //GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGB8, 0);
-//     GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
-
-//     memset(displayList, 0, MAX_DISPLAY_LIST_SIZE);
-
-//     // Invalidate vertex cache
-
-//     GX_InvVtxCache();
-
-//     // It's necessary to flush the data cache of the display list
-//     // just before filling it.
-
-//     DCInvalidateRange(displayList, MAX_DISPLAY_LIST_SIZE);
-
-//     // Start generating the display list
-
-//     GX_BeginDispList(displayList, MAX_DISPLAY_LIST_SIZE);
-
-//     GX_Begin(GX_TRIANGLESTRIP, GX_VTXFMT0, 4);
-//     GX_Position3f32(left, top, 0.0f);
-//     //GX_Color3f32(1.0f, 0.0f, 0.0f);
-//     GX_TexCoord2f32(uvLeft, uvTop);
-
-//     GX_Position3f32(right, top, 0.0f);
-//     //GX_Color3f32(0.0f, 1.0f, 0.0f);
-//     GX_TexCoord2f32(uvRight, uvTop);
-
-//     GX_Position3f32(left, bottom, 0.0f);
-//     //GX_Color3f32(0.0f, 0.0f, 1.0f);
-//     GX_TexCoord2f32(uvLeft, uvBottom);
-
-//     GX_Position3f32(right, bottom, 0.0f);
-//     //GX_Color3f32(1.0f, 1.0f, 1.0f);
-//     GX_TexCoord2f32(uvRight, uvBottom);
-
-//     GX_End();
-
-//     return GX_EndDispList();
-// }
-
-// void wii_graphics::CallDisplayList(void *displayList, uint32_t displayListSize)
-// {
-//     GX_CallDispList(displayList, displayListSize);
-// }
 
 void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
 {
@@ -218,7 +148,6 @@ void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, u
 
     if (!success)
     {
-        fopen("Error creating texture object.", "r");
         std::string message = "Error creating texture object.";
         svcOutputDebugString(message.c_str(), message.length());
     }
@@ -274,18 +203,3 @@ uint32_t wii_graphics::GetTextureSize(uint16_t width, uint16_t height, GPU_TEXCO
     size *= (uint32_t)width * height / 8;
     return C3D_TexCalcTotalSize(size, maxLevel);
 }
-
-// void wii_graphics::FlushDataCache(void *startAddress, uint32_t size)
-// {
-//     DCFlushRange(startAddress, size);
-// }
-
-// void wii_graphics::SwapBuffers()
-// {
-//     GX_CopyDisp(frameBuffer[currentFramebuffer], GX_TRUE);
-//     GX_DrawDone();
-//     VIDEO_SetNextFramebuffer(frameBuffer[currentFramebuffer]);
-//     VIDEO_Flush();
-//     VIDEO_WaitVSync();
-//     currentFramebuffer ^= 1;
-// }

@@ -2,6 +2,7 @@
 
 ; Uniforms
 .fvec projection[4], modelView[4]
+.fvec uvOffset
 
 ; Constants
 .constf myconst(0.0, 1.0, -1.0, -0.5)
@@ -33,8 +34,14 @@
 	dp4 outpos.z, projection[2], r1
 	dp4 outpos.w, projection[3], r1
 
-	; outtex = intex
-	mov outtc0, intex
+	; r2 = uvOffset
+	mov r2, uvOffset
+	; r3 = (intex.xy * r2.zw) + r2.xy
+	mul r3.xy, intex.xy, r2.zw
+	add r3.xy, r3.xy, r2.xy
+
+	; outtex = r3
+	mov outtc0, r3
 
 	; We're finished
 	end

@@ -106,7 +106,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	uint16_t texHeight = 512;
 	uint32_t textureSize = wii_graphics::GetTextureSize(texWidth, texHeight, GPU_RGBA8, 0);
 	uint8_t *textureData = (uint8_t *)linearAlloc(textureSize);
-	memset(textureData, 0xFF, textureSize);
+	memset(textureData, 0, textureSize);
 	C3D_Tex textureObject;
 	wii_graphics::CreateTextureObject(&textureObject, texWidth, texHeight, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
 	wii_graphics::BindTextureObject(&textureObject, 0);
@@ -203,36 +203,45 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 			uint32_t dstOffset = 0;
 			uint32_t widthCount = 0;
+			constexpr uint32_t tileSize = 8;
+			constexpr uint32_t subTileSize1 = 4;
+			constexpr uint32_t subTileSize2 = 2;
+			uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
 
-			for (int32_t y = 0; y < render::vscreen->Height; y += 8)
+			for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
 			{
-				for (int32_t x = 0; x < render::vscreen->Width; x += 8)
+				for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
 				{
-					for (uint8_t by1 = 0; by1 < 8; by1 += 4)
+					for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
 					{
-						for (uint8_t bx1 = 0; bx1 < 8; bx1 += 4)
+						for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
 						{
-							for (uint8_t by2 = 0; by2 < 4; by2 += 2)
+							for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
 							{
-								for (uint8_t bx2 = 0; bx2 < 4; bx2 += 2)
+								for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
 								{
-									for (uint8_t by3 = 0; by3 < 2; by3++)
+									for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
 									{
-										for (uint8_t bx3 = 0; bx3 < 2; bx3++)
-										{
-											Rgba color = render::vscreen->BmpBufPtr1[(y + by1 + by2 + by3) * render::vscreen->Width + (x + bx1 + bx2 + bx3)].rgba;
+										uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
+										Rgba color0 = render::vscreen->BmpBufPtr1[index + 0].rgba;
+										Rgba color1 = render::vscreen->BmpBufPtr1[index + 1].rgba;
 
-											textureData[dstOffset + 0] = color.Alpha;
-											textureData[dstOffset + 1] = color.Blue;
-											textureData[dstOffset + 2] = color.Green;
-											textureData[dstOffset + 3] = color.Red;
-											dstOffset += 4;
-											widthCount += 4;
-											if (widthCount == render::vscreen->Width * 8 * 4)
-											{
-												dstOffset += (texWidth - render::vscreen->Width) * 8 * 4;
-												widthCount = 0;
-											}
+										textureData[dstOffset + 0] = color0.Alpha;
+										textureData[dstOffset + 1] = color0.Blue;
+										textureData[dstOffset + 2] = color0.Green;
+										textureData[dstOffset + 3] = color0.Red;
+
+										textureData[dstOffset + 4] = color1.Alpha;
+										textureData[dstOffset + 5] = color1.Blue;
+										textureData[dstOffset + 6] = color1.Green;
+										textureData[dstOffset + 7] = color1.Red;
+
+										dstOffset += 8;
+										widthCount += 8;
+										if (widthCount == widthBytes)
+										{
+											dstOffset += (texWidth - render::vscreen->Width) << 5;
+											widthCount = 0;
 										}
 									}
 								}
@@ -245,19 +254,15 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			wii_graphics::UploadTextureObject(&textureObject, textureData);
 		}
 
-		// Render fullscreen quad
-
-		// Update uniforms
+		// Render fullscreen quads
 
 		wii_graphics::BeginRender();
 
-		wii_graphics::SetModelViewMatrix(0, render::vscreen->Height - texHeight, texWidth, texHeight);
-		wii_graphics::DrawQuad();
-		// wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, render::get_offset_x(), render::get_offset_y());
-		// wii_graphics::CallDisplayList(boardDisplayList, boardDisplayListSize);
-
-		// wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, 0.0f, 0.0f);
-		// wii_graphics::CallDisplayList(sidebarDisplayList, sidebarDisplayListSize);
+		constexpr float separationX = 375;
+		float tableWidthCoefficient = separationX / texWidth;
+		float y = render::vscreen->Height - texHeight;
+		wii_graphics::DrawQuad(render::get_offset_x(), y - render::get_offset_y(), separationX, texHeight, 0.0, 0.0, tableWidthCoefficient, 1.0);
+		wii_graphics::DrawQuad(separationX, y, render::vscreen->Width - separationX, texHeight, tableWidthCoefficient, 0.0, (render::vscreen->Width - separationX) / texWidth, 1.0);
 
 		wii_graphics::FinishRender();
 	}
