@@ -104,7 +104,7 @@ void wii_graphics::Dispose()
 void wii_graphics::BeginRender()
 {
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-    C3D_RenderTargetClear(target, C3D_CLEAR_ALL, 0x401020ff, 0);
+    C3D_RenderTargetClear(target, C3D_CLEAR_ALL, 0x000000ff, 0);
     C3D_FrameDrawOn(target);
 }
 

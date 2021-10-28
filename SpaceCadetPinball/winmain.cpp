@@ -161,11 +161,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	bQuit = false;
 
-	//char text[128];
-	//sprintf(text, "PROBANDOOOOOOOOOOOOOOOOOOOOOOOO");
-	//fopen("PROBANDOOOOOOOOOOOOOOOOOOO", "r");
-	//svcBreak(USERBREAK_USER);
-
 	while (wii_graphics::IsMainLoopRunning() && !bQuit)
 	{
 		// Input
@@ -195,72 +190,57 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 			// Copy game screen buffer to texture
 
-			//GX_InvalidateTexAll();
-
-			uint32_t dstOffset = 0;
-			uint32_t widthCount = 0;
-			constexpr uint8_t blockSize = 8;
-
-			for (int32_t y = 0; y < render::vscreen->Height; y += blockSize)
-			{
-				for (int32_t x = 0; x < render::vscreen->Width; x += blockSize)
-				{
-					for (uint8_t ty = 0; ty < blockSize; ty++)
-					{
-						for (uint8_t tx = 0; tx < blockSize; tx++)
-						{
-							Rgba color = render::vscreen->BmpBufPtr1[(y + ty) * render::vscreen->Width + (x + tx)].rgba;
-
-							textureData[dstOffset + 0] = color.Alpha;
-							textureData[dstOffset + 1] = color.Blue;
-							textureData[dstOffset + 2] = color.Green;
-							textureData[dstOffset + 3] = color.Red;
-							dstOffset += 4;
-							widthCount += 4;
-
-							if (widthCount == static_cast<uint32_t>(render::vscreen->Width) * 4)
-							{
-								dstOffset += (texWidth - render::vscreen->Width) * 4;
-								widthCount = 0;
-							}
-							// 	dstOffset += 32;
-
-							// textureData[dstOffset] = color.Alpha;
-							// dstOffset++;
-
-							// textureData[dstOffset] = color.Red;
-							// dstOffset += 31;
-
-							// textureData[dstOffset] = color.Green;
-							// dstOffset++;
-
-							// textureData[dstOffset] = color.Blue;
-							// dstOffset -= 31;
-
-							// if ((dstOffset & 31) == 0)
-							// 	dstOffset += 32;
-						}
-					}
-				}
-			}
-
-			// uint32_t dstOffset = 0;
-
 			// for (int32_t y = 0; y < render::vscreen->Height; y++)
 			// {
 			// 	for (int32_t x = 0; x < render::vscreen->Width; x++)
 			// 	{
-			// 		Rgba color = render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba;
-
-			// 		textureData[dstOffset + 0] = color.Alpha;
-			// 		textureData[dstOffset + 1] = color.Blue;
-			// 		textureData[dstOffset + 2] = color.Green;
-			// 		textureData[dstOffset + 3] = color.Red;
-			// 		dstOffset += 4;
+			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Alpha = 0xFF;
+			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Blue = 0x00;
+			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Green = y & 0xff;
+			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Red = x & 0xff;
 			// 	}
-
-			// 	dstOffset += (texWidth - render::vscreen->Width) * 4;
 			// }
+
+			uint32_t dstOffset = 0;
+			uint32_t widthCount = 0;
+
+			for (int32_t y = 0; y < render::vscreen->Height; y += 8)
+			{
+				for (int32_t x = 0; x < render::vscreen->Width; x += 8)
+				{
+					for (uint8_t by1 = 0; by1 < 8; by1 += 4)
+					{
+						for (uint8_t bx1 = 0; bx1 < 8; bx1 += 4)
+						{
+							for (uint8_t by2 = 0; by2 < 4; by2 += 2)
+							{
+								for (uint8_t bx2 = 0; bx2 < 4; bx2 += 2)
+								{
+									for (uint8_t by3 = 0; by3 < 2; by3++)
+									{
+										for (uint8_t bx3 = 0; bx3 < 2; bx3++)
+										{
+											Rgba color = render::vscreen->BmpBufPtr1[(y + by1 + by2 + by3) * render::vscreen->Width + (x + bx1 + bx2 + bx3)].rgba;
+
+											textureData[dstOffset + 0] = color.Alpha;
+											textureData[dstOffset + 1] = color.Blue;
+											textureData[dstOffset + 2] = color.Green;
+											textureData[dstOffset + 3] = color.Red;
+											dstOffset += 4;
+											widthCount += 4;
+											if (widthCount == render::vscreen->Width * 8 * 4)
+											{
+												dstOffset += (texWidth - render::vscreen->Width) * 8 * 4;
+												widthCount = 0;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 
 			wii_graphics::UploadTextureObject(&textureObject, textureData);
 		}
@@ -271,7 +251,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		wii_graphics::BeginRender();
 
-		wii_graphics::SetModelViewMatrix(0, 0, render::vscreen->Width, render::vscreen->Height);
+		wii_graphics::SetModelViewMatrix(0, render::vscreen->Height - texHeight, texWidth, texHeight);
 		wii_graphics::DrawQuad();
 		// wii_graphics::Load2DModelViewMatrix(GX_PNMTX0, render::get_offset_x(), render::get_offset_y());
 		// wii_graphics::CallDisplayList(boardDisplayList, boardDisplayListSize);
