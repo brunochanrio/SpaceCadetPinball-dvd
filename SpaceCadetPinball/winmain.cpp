@@ -10,8 +10,8 @@
 #include "pinball.h"
 #include "render.h"
 #include "Sound.h"
-#include "wii_graphics.h"
-#include "wii_input.h"
+#include "n3ds_graphics.h"
+#include "n3ds_input.h"
 
 int winmain::bQuit = 0;
 int winmain::activated;
@@ -36,31 +36,6 @@ optionsStruct &winmain::Options = options::Options;
 
 int winmain::WinMain(LPCSTR lpCmdLine)
 {
-	// std::string message = "INITIALIZING";
-	// svcOutputDebugString(message.c_str(), message.length());
-
-	// // Initialize graphics
-
-	// wii_graphics::Initialize();
-
-	// // Main loop
-	// while (wii_graphics::IsMainLoop())
-	// {
-	// 	wii_input::ScanPads();
-
-	// 	// Respond to user input
-	// 	u32 kDown = hidKeysDown();
-	// 	if (kDown & KEY_START)
-	// 		break; // break in order to return to hbmenu
-
-	// 	wii_graphics::Render();
-	// }
-
-	// // Deinitialize the scene
-	// wii_graphics::Dispose();
-
-	// return 0;
-
 	std::set_new_handler(memalloc_failure);
 
 	BasePath = (char *)"SpaceCadetPinball/";
@@ -98,58 +73,26 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// Initialize graphics
 
-	wii_graphics::Initialize();
+	n3ds_graphics::Initialize();
 
 	// Texture data and create texture object
 
 	uint16_t texWidth = 1024;
 	uint16_t texHeight = 512;
-	uint32_t textureSize = wii_graphics::GetTextureSize(texWidth, texHeight, GPU_RGBA8, 0);
+	uint32_t textureSize = n3ds_graphics::GetTextureSize(texWidth, texHeight, GPU_RGBA8, 0);
 	uint8_t *textureData = (uint8_t *)linearAlloc(textureSize);
 	memset(textureData, 0, textureSize);
 	C3D_Tex textureObject;
-	wii_graphics::CreateTextureObject(&textureObject, texWidth, texHeight, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
-	wii_graphics::BindTextureObject(&textureObject, 0);
+	n3ds_graphics::CreateTextureObject(&textureObject, texWidth, texHeight, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
+	n3ds_graphics::BindTextureObject(&textureObject, 0);
 
 	// Set the projection matrix according to screen texture resolution
 
-	wii_graphics::SetOrthoProjectionMatrix(0, render::vscreen->Width, 0, render::vscreen->Height, 0.1f, 1.0f);
-
-	// Create quad display list for the board and for the side bar
-
-	// Normal values for the board's size are: 0, texHeight, 0, 375
-	// but reduced the size a bit to compensate overscan in a TV.
-	// Ideally this should be done adjusting the VI, but I was unsuccessful and had crashes.
-
-	// void *boardDisplayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
-	// uint32_t boardDisplayListSize = wii_graphics::Create2DQuadDisplayList(boardDisplayList, 12, texHeight - 10, 16, 371, 0.0f, 1.0f, 0.0f, 0.625f);
-
-	// if (boardDisplayListSize == 0)
-	// {
-	// 	printf("Board display list exceeded size.");
-	// 	exit(EXIT_FAILURE);
-	// }
-	// else
-	// {
-	// 	printf("Board display list size: %u", boardDisplayListSize);
-	// }
-
-	// void *sidebarDisplayList = memalign(32, MAX_DISPLAY_LIST_SIZE);
-	// uint32_t sidebarDisplayListSize = wii_graphics::Create2DQuadDisplayList(sidebarDisplayList, 0, texHeight, 375, texWidth, 0.0f, 1.0f, 0.625f, 1.0f);
-
-	// if (sidebarDisplayListSize == 0)
-	// {
-	// 	printf("Sidebar display list exceeded size.");
-	// 	exit(EXIT_FAILURE);
-	// }
-	// else
-	// {
-	// 	printf("Sidebar display list size: %u", sidebarDisplayListSize);
-	// }
+	n3ds_graphics::SetOrthoProjectionMatrix(0, render::vscreen->Width, 0, render::vscreen->Height, 0.1f, 1.0f);
 
 	// Initialize input
 
-	wii_input::Initialize();
+	n3ds_input::Initialize();
 
 	// Initialize game
 
@@ -161,14 +104,14 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	bQuit = false;
 
-	while (wii_graphics::IsMainLoopRunning() && !bQuit)
+	while (n3ds_graphics::IsMainLoopRunning() && !bQuit)
 	{
 		// Input
 
-		wii_input::ScanPads();
+		n3ds_input::ScanPads();
 
-		uint32_t buttonsDown = wii_input::GetButtonsDown();
-		uint32_t buttonsUp = wii_input::GetButtonsUp();
+		uint32_t buttonsDown = n3ds_input::GetButtonsDown();
+		uint32_t buttonsUp = n3ds_input::GetButtonsUp();
 
 		if (buttonsDown & KEY_Y)
 			break;
@@ -251,20 +194,20 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 				}
 			}
 
-			wii_graphics::UploadTextureObject(&textureObject, textureData);
+			n3ds_graphics::UploadTextureObject(&textureObject, textureData);
 		}
 
 		// Render fullscreen quads
 
-		wii_graphics::BeginRender();
+		n3ds_graphics::BeginRender();
 
 		constexpr float separationX = 375;
 		float tableWidthCoefficient = separationX / texWidth;
 		float y = render::vscreen->Height - texHeight;
-		wii_graphics::DrawQuad(render::get_offset_x(), y - render::get_offset_y(), separationX, texHeight, 0.0, 0.0, tableWidthCoefficient, 1.0);
-		wii_graphics::DrawQuad(separationX, y, render::vscreen->Width - separationX, texHeight, tableWidthCoefficient, 0.0, (render::vscreen->Width - separationX) / texWidth, 1.0);
+		n3ds_graphics::DrawQuad(render::get_offset_x(), y - render::get_offset_y(), separationX, texHeight, 0.0, 0.0, tableWidthCoefficient, 1.0);
+		n3ds_graphics::DrawQuad(separationX, y, render::vscreen->Width - separationX, texHeight, tableWidthCoefficient, 0.0, (render::vscreen->Width - separationX) / texWidth, 1.0);
 
-		wii_graphics::FinishRender();
+		n3ds_graphics::FinishRender();
 	}
 
 	printf("Uninitializing...");
@@ -275,11 +218,11 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	midi::music_shutdown();
 	pb::uninit();
 	Sound::Close();
-	wii_graphics::Dispose();
+	n3ds_graphics::Dispose();
 
 	C3D_TexDelete(&textureObject);
 	linearFree(textureData);
-	wii_graphics::Dispose();
+	n3ds_graphics::Dispose();
 
 	printf("Finished uninitializing.");
 

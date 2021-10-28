@@ -8,7 +8,7 @@
      GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8) | GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8) | \
      GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
-class wii_graphics
+class n3ds_graphics
 {
 private:
     static C3D_RenderTarget *target;

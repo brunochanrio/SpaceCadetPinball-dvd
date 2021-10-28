@@ -2,7 +2,7 @@
 
 #include <3ds.h>
 
-class wii_input
+class n3ds_input
 {
 public:
     static void Initialize();

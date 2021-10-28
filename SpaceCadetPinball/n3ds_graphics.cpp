@@ -1,4 +1,4 @@
-#include "wii_graphics.h"
+#include "n3ds_graphics.h"
 
 #include <cstdio>
 #include <string>
@@ -7,15 +7,15 @@
 
 #include "vshader_shbin.h"
 
-C3D_RenderTarget *wii_graphics::target = nullptr;
+C3D_RenderTarget *n3ds_graphics::target = nullptr;
 
-DVLB_s *wii_graphics::vshader_dvlb = nullptr;
-shaderProgram_s wii_graphics::program = {};
-int8_t wii_graphics::uLoc_projection = 0;
-int8_t wii_graphics::uLoc_modelView = 0;
-int8_t wii_graphics::uLoc_uvOffset = 0;
-C3D_Mtx wii_graphics::projection = {};
-void *wii_graphics::vbo_data = nullptr;
+DVLB_s *n3ds_graphics::vshader_dvlb = nullptr;
+shaderProgram_s n3ds_graphics::program = {};
+int8_t n3ds_graphics::uLoc_projection = 0;
+int8_t n3ds_graphics::uLoc_modelView = 0;
+int8_t n3ds_graphics::uLoc_uvOffset = 0;
+C3D_Mtx n3ds_graphics::projection = {};
+void *n3ds_graphics::vbo_data = nullptr;
 
 typedef struct
 {
@@ -33,7 +33,7 @@ static const vertex vertex_list[] =
 
 #define vertex_list_count (sizeof(vertex_list) / sizeof(vertex_list[0]))
 
-void wii_graphics::Initialize()
+void n3ds_graphics::Initialize()
 {
     // Initialize graphics
 
@@ -86,7 +86,7 @@ void wii_graphics::Initialize()
     C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
 }
 
-void wii_graphics::Dispose()
+void n3ds_graphics::Dispose()
 {
     // Free the VBO
 
@@ -103,30 +103,30 @@ void wii_graphics::Dispose()
     gfxExit();
 }
 
-void wii_graphics::BeginRender()
+void n3ds_graphics::BeginRender()
 {
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     C3D_RenderTargetClear(target, C3D_CLEAR_ALL, 0x000000ff, 0);
     C3D_FrameDrawOn(target);
 }
 
-void wii_graphics::FinishRender()
+void n3ds_graphics::FinishRender()
 {
     C3D_FrameEnd(0);
 }
 
-bool wii_graphics::IsMainLoopRunning()
+bool n3ds_graphics::IsMainLoopRunning()
 {
     return aptMainLoop();
 }
 
-void wii_graphics::SetOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
+void n3ds_graphics::SetOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
 {
     Mtx_OrthoTilt(&projection, left, right, bottom, top, near, far, true);
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
 }
 
-void wii_graphics::SetModelViewMatrix(float x, float y, float w, float h)
+void n3ds_graphics::SetModelViewMatrix(float x, float y, float w, float h)
 {
     C3D_Mtx modelView;
     Mtx_Identity(&modelView);
@@ -135,14 +135,14 @@ void wii_graphics::SetModelViewMatrix(float x, float y, float w, float h)
     C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
 }
 
-void wii_graphics::DrawQuad(float x, float y, float w, float h, float uvX, float uvY, float uvW, float uvH)
+void n3ds_graphics::DrawQuad(float x, float y, float w, float h, float uvX, float uvY, float uvW, float uvH)
 {
     SetModelViewMatrix(x, y, w, h);
     C3D_FVUnifSet(GPU_VERTEX_SHADER, uLoc_uvOffset, uvX, uvY, uvW, uvH);
     C3D_DrawArrays(GPU_TRIANGLE_STRIP, 0, vertex_list_count);
 }
 
-void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
+void n3ds_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
 {
     bool success = C3D_TexInit(textureObject, width, height, format);
 
@@ -157,18 +157,18 @@ void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, u
     C3D_TexSetWrap(textureObject, wrap, wrap);
 }
 
-void wii_graphics::UploadTextureObject(C3D_Tex *textureObject, uint8_t *textureData)
+void n3ds_graphics::UploadTextureObject(C3D_Tex *textureObject, uint8_t *textureData)
 {
     C3D_TexUpload(textureObject, textureData);
     //C3D_TexFlush(&textureObject);
 }
 
-void wii_graphics::BindTextureObject(C3D_Tex *textureObject, int32_t mapIndex)
+void n3ds_graphics::BindTextureObject(C3D_Tex *textureObject, int32_t mapIndex)
 {
     C3D_TexBind(mapIndex, textureObject);
 }
 
-uint32_t wii_graphics::GetTextureSize(uint16_t width, uint16_t height, GPU_TEXCOLOR format, int32_t maxLevel)
+uint32_t n3ds_graphics::GetTextureSize(uint16_t width, uint16_t height, GPU_TEXCOLOR format, int32_t maxLevel)
 {
     uint32_t size = 0;
 

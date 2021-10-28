@@ -25,7 +25,7 @@
 #include "score.h"
 #include "TPinballTable.h"
 #include "TTextBox.h"
-#include "wii_input.h"
+#include "n3ds_input.h"
 
 TPinballTable* pb::MainTable = nullptr;
 DatFile* pb::record_table = nullptr;
