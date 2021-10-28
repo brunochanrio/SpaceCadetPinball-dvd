@@ -57,7 +57,7 @@ CXXFLAGS	:= $(CFLAGS) -frtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lSDL_mixer -lSDL -lcitro3d -lctru -lm
+LIBS	:= -lSDL_mixer -lSDL -lmikmod -lmad -lvorbisidec -logg -lcitro3d -lctru -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

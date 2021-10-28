@@ -1,17 +1,14 @@
 {
     "configurations": [
         {
-            "name": "Wii",
+            "name": "3DS",
             "includePath": [
                 "${workspaceFolder}",
                 "${DEVKITPRO}/libctru/**",
                 "${DEVKITPRO}/portlibs/3ds/include/**",
                 "${workspaceFolder}/build/"
             ],
-            "defines":
-            [
-                //"BIG_ENDIAN"
-            ],
+            "defines": [],
             "compilerPath": "${DEVKITPRO}/devkitARM/bin/arm-none-eabi-g++",
             "compilerArgs": []
         }

@@ -7,7 +7,6 @@
 #include "gdrv.h"
 #include "pb.h"
 #include "pinball.h"
-#include "utils.h"
 #include "zdrv.h"
 
 
@@ -304,9 +303,6 @@ void DatFile::Finalize()
 		fseek(fileHandle, 0, SEEK_SET);
 		fread(rcData, 1, fileSize, fileHandle);
 
-		rcData->GapWidth = utils::swap_i16(rcData->GapWidth);
-		rcData->Unknown1 = utils::swap_i16(rcData->Unknown1);
-		rcData->Height = utils::swap_i16(rcData->Height);
 		fclose(fileHandle);
 		AddMsgFont(rcData, "pbmsg_ft");
 		delete[] rcData;

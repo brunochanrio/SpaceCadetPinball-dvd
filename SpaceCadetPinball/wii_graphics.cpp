@@ -16,13 +16,6 @@ int wii_graphics::uLoc_modelView = 0;
 C3D_Mtx wii_graphics::projection = {};
 void *wii_graphics::vbo_data = nullptr;
 
-C3D_Tex wii_graphics::textureObject = {};
-uint8_t *wii_graphics::textureData = nullptr;
-
-
-
-uint32_t frame = 0;
-
 typedef struct
 {
     float position[3];
@@ -31,10 +24,10 @@ typedef struct
 
 static const vertex vertex_list[] =
 {
-    {{100.0f, 200.0f, 0.5f}, {0.0f, 0.0f}},
-    {{100.0f, 40.0f, 0.5f}, {0.0f, 1.0f}},
-    {{300.0f, 200.0f, 0.5f}, {1.0f, 0.0f}},
-    {{300.0f, 40.0f, 0.5f}, {1.0f, 1.0f}}
+    {{0.0f, 1.0f, 0.5f}, {0.0f, 0.0f}},
+    {{0.0f, 0.0f, 0.5f}, {0.0f, 1.0f}},
+    {{1.0f, 1.0f, 0.5f}, {1.0f, 0.0f}},
+    {{1.0f, 0.0f, 0.5f}, {1.0f, 1.0f}}
 };
 
 #define vertex_list_count (sizeof(vertex_list) / sizeof(vertex_list[0]))
@@ -70,10 +63,6 @@ void wii_graphics::Initialize()
     AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0=position
     AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v1=texcoord
 
-    // Compute the projection matrix
-
-    Mtx_OrthoTilt(&projection, 0.0, 400.0, 0.0, 240.0, 0.0, 1.0, true);
-
     // Create the VBO (vertex buffer object)
 
     vbo_data = linearAlloc(sizeof(vertex_list));
@@ -85,37 +74,18 @@ void wii_graphics::Initialize()
     BufInfo_Init(bufInfo);
     BufInfo_Add(bufInfo, vbo_data, sizeof(vertex), 2, 0x10);
 
-    // Load the texture and bind it to the first texture unit
-
-    uint32_t textureSize = 8*8*4;// GetTextureSize(8, 8, GPU_RGBA8, 0);
-    textureData = (uint8_t *)linearAlloc(textureSize);
-
-    for (uint32_t i = 0; i < textureSize; i += 4)
-    {
-        textureData[i + 0] = 0xff;
-        textureData[i + 1] = 0x00;
-        textureData[i + 2] = 0x00;
-        textureData[i + 3] = 0xff;
-    }
-
-    CreateTextureObject(&textureObject, textureData, 8, 8, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
-    LoadTextureObject(&textureObject, 0);
-
     // Configure the first fragment shading substage to just pass through the vertex color
     // See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
 
     C3D_TexEnv *env = C3D_GetTexEnv(0);
     C3D_TexEnvInit(env);
-    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, GPU_PRIMARY_COLOR);
+    C3D_TexEnvColor(env, 0xff00ffff);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_CONSTANT, GPU_CONSTANT);
     C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
 }
 
 void wii_graphics::Dispose()
 {
-    // Free texture
-    C3D_TexDelete(&textureObject);
-    linearFree(textureData);
-
     // Free the VBO
 
     linearFree(vbo_data);
@@ -131,37 +101,15 @@ void wii_graphics::Dispose()
     gfxExit();
 }
 
-void wii_graphics::Render()
+void wii_graphics::BeginRender()
 {
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-    C3D_RenderTargetClear(target, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+    C3D_RenderTargetClear(target, C3D_CLEAR_ALL, 0x401020ff, 0);
     C3D_FrameDrawOn(target);
+}
 
-    // Update the uniforms
-
-    C3D_Mtx modelView;
-    Mtx_Identity(&modelView);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
-
-    // Update texture
-
-    for (uint32_t i = 0; i < 8*8*4; i += 4)
-    {
-        textureData[i + 0] = 0xff;
-        textureData[i + 1] = (frame << 2) & 0xFF;
-        textureData[i + 2] = 0x00;
-        textureData[i + 3] = 0xff;
-    }
-
-    frame++;
-
-    C3D_TexUpload(&textureObject, textureData);
-    //C3D_TexFlush(&textureObject);
-
-    // Draw the VBO
-    C3D_DrawArrays(GPU_TRIANGLE_STRIP, 0, vertex_list_count);
-
+void wii_graphics::FinishRender()
+{
     C3D_FrameEnd(0);
 }
 
@@ -170,12 +118,25 @@ bool wii_graphics::IsMainLoop()
     return aptMainLoop();
 }
 
-// void wii_graphics::LoadOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far)
-// {
-//     Mtx44 projectionMatrix;
-//     guOrtho(projectionMatrix, top, bottom, left, right, near, far);
-//     GX_LoadProjectionMtx(projectionMatrix, GX_ORTHOGRAPHIC);
-// }
+void wii_graphics::SetOrthoProjectionMatrix(float top, float bottom, float left, float right, float near, float far)
+{
+    Mtx_OrthoTilt(&projection, left, right, bottom, top, near, far, true);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+}
+
+void wii_graphics::SetModelViewMatrix(float x, float y, float w, float h)
+{
+    C3D_Mtx modelView;
+    Mtx_Identity(&modelView);
+    Mtx_Translate(&modelView, x, y, 0.0f, false);
+    Mtx_Scale(&modelView, w, h, 1.0f);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_modelView, &modelView);
+}
+
+void wii_graphics::DrawQuad()
+{
+    C3D_DrawArrays(GPU_TRIANGLE_STRIP, 0, vertex_list_count);
+}
 
 // void wii_graphics::Load2DModelViewMatrix(uint32_t matrixIndex, float x, float y)
 // {
@@ -251,27 +212,29 @@ bool wii_graphics::IsMainLoop()
 //     GX_CallDispList(displayList, displayListSize);
 // }
 
-void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint8_t *textureData, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
+void wii_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
 {
     bool success = C3D_TexInit(textureObject, width, height, format);
 
     if (!success)
     {
+        fopen("Error creating texture object.", "r");
         std::string message = "Error creating texture object.";
         svcOutputDebugString(message.c_str(), message.length());
     }
 
-    C3D_TexUpload(textureObject, textureData);
+    //C3D_TexUpload(textureObject, textureData);
     C3D_TexSetFilter(textureObject, filter, filter);
     C3D_TexSetWrap(textureObject, wrap, wrap);
-
-    //GX_InvalidateTexAll();
-
-    //GX_InitTexObj(textureObject, textureData, width, height, format, wrap, wrap, GX_FALSE);
-    //GX_InitTexObjFilterMode(textureObject, filter, filter);
 }
 
-void wii_graphics::LoadTextureObject(C3D_Tex *textureObject, int32_t mapIndex)
+void wii_graphics::UploadTextureObject(C3D_Tex *textureObject, uint8_t *textureData)
+{
+    C3D_TexUpload(textureObject, textureData);
+    //C3D_TexFlush(&textureObject);
+}
+
+void wii_graphics::BindTextureObject(C3D_Tex *textureObject, int32_t mapIndex)
 {
     C3D_TexBind(mapIndex, textureObject);
 }
