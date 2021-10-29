@@ -77,18 +77,21 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// Texture data and create texture object
 
-	uint16_t texWidth = 1024;
-	uint16_t texHeight = 512;
-	uint32_t textureSize = n3ds_graphics::GetTextureSize(texWidth, texHeight, GPU_RGBA8, 0);
-	uint8_t *textureData = (uint8_t *)linearAlloc(textureSize);
-	memset(textureData, 0, textureSize);
-	C3D_Tex textureObject;
-	n3ds_graphics::CreateTextureObject(&textureObject, texWidth, texHeight, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
-	n3ds_graphics::BindTextureObject(&textureObject, 0);
+	uint32_t screenTextureSize = render::vscreen->Width * render::vscreen->Height;
+
+	uint16_t renderTextureWidth = 1024;
+	uint16_t renderTextureHeight = 512;
+	uint32_t renderTextureByteCount = n3ds_graphics::GetTextureSize(renderTextureWidth, renderTextureHeight, GPU_RGBA8, 0);
+	uint8_t *renderTextureData = (uint8_t *)linearAlloc(renderTextureByteCount);
+	memset(renderTextureData, 0, renderTextureByteCount);
+
+	C3D_Tex renderTextureObject;
+	n3ds_graphics::CreateTextureObject(&renderTextureObject, renderTextureWidth, renderTextureHeight, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
+	n3ds_graphics::BindTextureObject(&renderTextureObject, 0);
 
 	// Precalculate the Morton swizzle
 
-	uint8_t **swizzle = new uint8_t*[render::vscreen->Width * render::vscreen->Height];
+	uint8_t **swizzle = new uint8_t *[screenTextureSize];
 
 	uint32_t dstOffset = 0;
 	uint32_t widthCount = 0;
@@ -112,14 +115,14 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 							for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
 							{
 								uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
-								swizzle[index + 0] = &textureData[dstOffset + 0];
-								swizzle[index + 1] = &textureData[dstOffset + 4];
+								swizzle[index + 0] = &renderTextureData[dstOffset + 0];
+								swizzle[index + 1] = &renderTextureData[dstOffset + 4];
 
 								dstOffset += 8;
 								widthCount += 8;
 								if (widthCount == widthBytes)
 								{
-									dstOffset += (texWidth - render::vscreen->Width) << 5;
+									dstOffset += (renderTextureWidth - render::vscreen->Width) << 5;
 									widthCount = 0;
 								}
 							}
@@ -188,7 +191,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			// 	}
 			// }
 
-			for (int32_t i = 0; i < render::vscreen->Width * render::vscreen->Height; i++)
+			for (uint32_t i = 0; i < screenTextureSize; i++)
 			{
 				Rgba color = render::vscreen->BmpBufPtr1[i].rgba;
 				*(swizzle[i] + 0) = color.Alpha;
@@ -197,7 +200,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 				*(swizzle[i] + 3) = color.Red;
 			}
 
-			n3ds_graphics::UploadTextureObject(&textureObject, textureData);
+			n3ds_graphics::UploadTextureObject(&renderTextureObject, renderTextureData);
 		}
 
 		// Render fullscreen quads
@@ -205,10 +208,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		n3ds_graphics::BeginRender();
 
 		constexpr float separationX = 375;
-		float tableWidthCoefficient = separationX / texWidth;
-		float y = render::vscreen->Height - texHeight;
-		n3ds_graphics::DrawQuad(render::get_offset_x(), y - render::get_offset_y(), separationX, texHeight, 0.0, 0.0, tableWidthCoefficient, 1.0);
-		n3ds_graphics::DrawQuad(separationX, y, render::vscreen->Width - separationX, texHeight, tableWidthCoefficient, 0.0, (render::vscreen->Width - separationX) / texWidth, 1.0);
+		float tableWidthCoefficient = separationX / renderTextureWidth;
+		float y = render::vscreen->Height - renderTextureHeight;
+		n3ds_graphics::DrawQuad(render::get_offset_x(), y - render::get_offset_y(), separationX, renderTextureHeight, 0.0, 0.0, tableWidthCoefficient, 1.0);
+		n3ds_graphics::DrawQuad(separationX, y, render::vscreen->Width - separationX, renderTextureHeight, tableWidthCoefficient, 0.0, (render::vscreen->Width - separationX) / renderTextureWidth, 1.0);
 
 		n3ds_graphics::FinishRender();
 	}
@@ -224,8 +227,8 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	n3ds_graphics::Dispose();
 
 	delete[] swizzle;
-	C3D_TexDelete(&textureObject);
-	linearFree(textureData);
+	C3D_TexDelete(&renderTextureObject);
+	linearFree(renderTextureData);
 	n3ds_graphics::Dispose();
 
 	printf("Finished uninitializing.");
