@@ -163,29 +163,38 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 							{
 								for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
 								{
-									for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
+									uint32_t index = (y + ty + sty1 + 0) * render::vscreen->Width + (x + tx + stx1);
+									Rgba color = render::vscreen->BmpBufPtr1[index + 0].rgba;
+									textureData[dstOffset + 0] = color.Alpha;
+									textureData[dstOffset + 1] = color.Blue;
+									textureData[dstOffset + 2] = color.Green;
+									textureData[dstOffset + 3] = color.Red;
+
+									color = render::vscreen->BmpBufPtr1[index + 1].rgba;
+									textureData[dstOffset + 4] = color.Alpha;
+									textureData[dstOffset + 5] = color.Blue;
+									textureData[dstOffset + 6] = color.Green;
+									textureData[dstOffset + 7] = color.Red;
+
+									index = (y + ty + sty1 + 1) * render::vscreen->Width + (x + tx + stx1);
+									color = render::vscreen->BmpBufPtr1[index + 0].rgba;
+									textureData[dstOffset + 8] = color.Alpha;
+									textureData[dstOffset + 9] = color.Blue;
+									textureData[dstOffset + 10] = color.Green;
+									textureData[dstOffset + 11] = color.Red;
+
+									color = render::vscreen->BmpBufPtr1[index + 1].rgba;
+									textureData[dstOffset + 12] = color.Alpha;
+									textureData[dstOffset + 13] = color.Blue;
+									textureData[dstOffset + 14] = color.Green;
+									textureData[dstOffset + 15] = color.Red;
+
+									dstOffset += 16;
+									widthCount += 16;
+									if (widthCount == widthBytes)
 									{
-										uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
-										Rgba color0 = render::vscreen->BmpBufPtr1[index + 0].rgba;
-										Rgba color1 = render::vscreen->BmpBufPtr1[index + 1].rgba;
-
-										textureData[dstOffset + 0] = color0.Alpha;
-										textureData[dstOffset + 1] = color0.Blue;
-										textureData[dstOffset + 2] = color0.Green;
-										textureData[dstOffset + 3] = color0.Red;
-
-										textureData[dstOffset + 4] = color1.Alpha;
-										textureData[dstOffset + 5] = color1.Blue;
-										textureData[dstOffset + 6] = color1.Green;
-										textureData[dstOffset + 7] = color1.Red;
-
-										dstOffset += 8;
-										widthCount += 8;
-										if (widthCount == widthBytes)
-										{
-											dstOffset += (texWidth - render::vscreen->Width) << 5;
-											widthCount = 0;
-										}
+										dstOffset += (texWidth - render::vscreen->Width) << 5;
+										widthCount = 0;
 									}
 								}
 							}
