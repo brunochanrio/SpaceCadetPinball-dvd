@@ -86,6 +86,50 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	n3ds_graphics::CreateTextureObject(&textureObject, texWidth, texHeight, GPU_RGBA8, GPU_CLAMP_TO_EDGE, GPU_LINEAR);
 	n3ds_graphics::BindTextureObject(&textureObject, 0);
 
+	// Precalculate the Morton swizzle
+
+	uint8_t **swizzle = new uint8_t*[render::vscreen->Width * render::vscreen->Height];
+
+	uint32_t dstOffset = 0;
+	uint32_t widthCount = 0;
+	constexpr uint32_t tileSize = 8;
+	constexpr uint32_t subTileSize1 = 4;
+	constexpr uint32_t subTileSize2 = 2;
+	uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
+
+	for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
+	{
+		for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
+		{
+			for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
+			{
+				for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
+				{
+					for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
+					{
+						for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
+						{
+							for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
+							{
+								uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
+								swizzle[index + 0] = &textureData[dstOffset + 0];
+								swizzle[index + 1] = &textureData[dstOffset + 4];
+
+								dstOffset += 8;
+								widthCount += 8;
+								if (widthCount == widthBytes)
+								{
+									dstOffset += (texWidth - render::vscreen->Width) << 5;
+									widthCount = 0;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Set the projection matrix according to screen texture resolution
 
 	n3ds_graphics::SetOrthoProjectionMatrix(0, render::vscreen->Width, 0, render::vscreen->Height, 0.1f, 1.0f);
@@ -144,63 +188,13 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			// 	}
 			// }
 
-			uint32_t dstOffset = 0;
-			uint32_t widthCount = 0;
-			constexpr uint32_t tileSize = 8;
-			constexpr uint32_t subTileSize1 = 4;
-			constexpr uint32_t subTileSize2 = 2;
-			uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
-
-			for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
+			for (int32_t i = 0; i < render::vscreen->Width * render::vscreen->Height; i++)
 			{
-				for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
-				{
-					for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
-					{
-						for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
-						{
-							for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
-							{
-								for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
-								{
-									uint32_t index = (y + ty + sty1 + 0) * render::vscreen->Width + (x + tx + stx1);
-									Rgba color = render::vscreen->BmpBufPtr1[index + 0].rgba;
-									textureData[dstOffset + 0] = color.Alpha;
-									textureData[dstOffset + 1] = color.Blue;
-									textureData[dstOffset + 2] = color.Green;
-									textureData[dstOffset + 3] = color.Red;
-
-									color = render::vscreen->BmpBufPtr1[index + 1].rgba;
-									textureData[dstOffset + 4] = color.Alpha;
-									textureData[dstOffset + 5] = color.Blue;
-									textureData[dstOffset + 6] = color.Green;
-									textureData[dstOffset + 7] = color.Red;
-
-									index = (y + ty + sty1 + 1) * render::vscreen->Width + (x + tx + stx1);
-									color = render::vscreen->BmpBufPtr1[index + 0].rgba;
-									textureData[dstOffset + 8] = color.Alpha;
-									textureData[dstOffset + 9] = color.Blue;
-									textureData[dstOffset + 10] = color.Green;
-									textureData[dstOffset + 11] = color.Red;
-
-									color = render::vscreen->BmpBufPtr1[index + 1].rgba;
-									textureData[dstOffset + 12] = color.Alpha;
-									textureData[dstOffset + 13] = color.Blue;
-									textureData[dstOffset + 14] = color.Green;
-									textureData[dstOffset + 15] = color.Red;
-
-									dstOffset += 16;
-									widthCount += 16;
-									if (widthCount == widthBytes)
-									{
-										dstOffset += (texWidth - render::vscreen->Width) << 5;
-										widthCount = 0;
-									}
-								}
-							}
-						}
-					}
-				}
+				Rgba color = render::vscreen->BmpBufPtr1[i].rgba;
+				*(swizzle[i] + 0) = color.Alpha;
+				*(swizzle[i] + 1) = color.Blue;
+				*(swizzle[i] + 2) = color.Green;
+				*(swizzle[i] + 3) = color.Red;
 			}
 
 			n3ds_graphics::UploadTextureObject(&textureObject, textureData);
@@ -229,6 +223,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	Sound::Close();
 	n3ds_graphics::Dispose();
 
+	delete[] swizzle;
 	C3D_TexDelete(&textureObject);
 	linearFree(textureData);
 	n3ds_graphics::Dispose();

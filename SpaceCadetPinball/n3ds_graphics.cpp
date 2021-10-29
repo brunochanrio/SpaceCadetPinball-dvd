@@ -105,7 +105,7 @@ void n3ds_graphics::Dispose()
 
 void n3ds_graphics::BeginRender()
 {
-    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    C3D_FrameBegin(0);
     C3D_RenderTargetClear(target, C3D_CLEAR_ALL, 0x000000ff, 0);
     C3D_FrameDrawOn(target);
 }
