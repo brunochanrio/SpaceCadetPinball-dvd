@@ -40,6 +40,10 @@ GRAPHICS	:=	gfx
 GFXBUILD	:=	$(BUILD)
 #ROMFS		:=	romfs
 #GFXBUILD	:=	$(ROMFS)/gfx
+APP_TITLE	:= 3D Pinball - Space Cadet
+APP_DESCRIPTION := 3D Pinball - Space Cadet for Nintendo 3DS
+APP_AUTHOR	:= k4zmu2a / MaikelChan
+ICON		:= Icon.png
 
 #---------------------------------------------------------------------------------
 # options for code generation
