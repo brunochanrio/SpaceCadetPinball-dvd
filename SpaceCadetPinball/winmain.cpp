@@ -33,14 +33,14 @@ std::string winmain::FpsDetails;
 double winmain::UpdateToFrameRatio;
 winmain::DurationMs winmain::TargetFrameTime;
 optionsStruct &winmain::Options = options::Options;
+PrintConsole *winmain::Console = nullptr;
 
 int winmain::WinMain(LPCSTR lpCmdLine)
 {
 	std::set_new_handler(memalloc_failure);
 
-	// Initialize graphics and the console for printing error messages
+	// Initialize graphics
 	gfxInitDefault();
-	consoleInit(GFX_TOP, NULL);
 
 	// Set the base path for PINBALL.DAT
 
@@ -76,16 +76,19 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		}
 	}
 
-	// Initialize 3D graphics
+	// Initialize 3D graphics and matrices
 
 	n3ds_graphics::Initialize();
+
+	n3ds_graphics::SetTopOrthoProjectionMatrix(0, GSP_SCREEN_HEIGHT_TOP, 0, GSP_SCREEN_WIDTH, 0.1f, 1.0f);
+	n3ds_graphics::SetBottomOrthoProjectionMatrix(0, GSP_SCREEN_HEIGHT_BOTTOM, 0, GSP_SCREEN_WIDTH, 0.1f, 1.0f);
 
 	// Texture data and create texture object
 
 	uint32_t screenTextureSize = render::vscreen->Width * render::vscreen->Height;
 
-	uint16_t renderTextureWidth = 1024;
-	uint16_t renderTextureHeight = 512;
+	constexpr uint16_t renderTextureWidth = 1024;
+	constexpr uint16_t renderTextureHeight = 512;
 	uint32_t renderTextureByteCount = n3ds_graphics::GetTextureSize(renderTextureWidth, renderTextureHeight, GPU_RGBA8, 0);
 	uint8_t *renderTextureData = (uint8_t *)linearAlloc(renderTextureByteCount);
 	memset(renderTextureData, 0, renderTextureByteCount);
@@ -139,10 +142,6 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			}
 		}
 	}
-
-	// Set the projection matrix according to screen texture resolution
-
-	n3ds_graphics::SetOrthoProjectionMatrix(0, render::vscreen->Width, 0, render::vscreen->Height, 0.1f, 1.0f);
 
 	// Initialize input
 
@@ -210,15 +209,47 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			n3ds_graphics::UploadTextureObject(&renderTextureObject, renderTextureData);
 		}
 
-		// Render fullscreen quads
+		// Render top screen
 
 		n3ds_graphics::BeginRender();
 
-		constexpr float separationX = 375;
-		float tableWidthCoefficient = separationX / renderTextureWidth;
-		float y = render::vscreen->Height - renderTextureHeight;
-		n3ds_graphics::DrawQuad(render::get_offset_x(), y - render::get_offset_y(), separationX, renderTextureHeight, 0.0, 0.0, tableWidthCoefficient, 1.0);
-		n3ds_graphics::DrawQuad(separationX, y, render::vscreen->Width - separationX, renderTextureHeight, tableWidthCoefficient, 0.0, (render::vscreen->Width - separationX) / renderTextureWidth, 1.0);
+		float tableQuadWidth = GSP_SCREEN_WIDTH * (360.0f / render::vscreen->Height);
+		float infoQuadWidth = GSP_SCREEN_HEIGHT_TOP - tableQuadWidth - 6.0f;
+		float logoQuadWidth = GSP_SCREEN_WIDTH * (181.0f / 160.0f);
+
+		n3ds_graphics::DrawTopRenderTarget(0x000000ff);
+		n3ds_graphics::DrawQuad( // Table
+			3.0f + render::get_offset_x(),
+			-render::get_offset_y(),
+			tableQuadWidth,
+			GSP_SCREEN_WIDTH,
+			3.0f / renderTextureWidth,
+			96.0f / renderTextureHeight,
+			360.0f / renderTextureWidth,
+			static_cast<float>(render::vscreen->Height) / renderTextureHeight);
+
+		n3ds_graphics::DrawQuad( // Info
+			GSP_SCREEN_HEIGHT_TOP - infoQuadWidth,
+			0,
+			infoQuadWidth,
+			GSP_SCREEN_WIDTH,
+			386.0f / renderTextureWidth,
+			111.0f / renderTextureHeight,
+			203.0f / renderTextureWidth,
+			214.0f / renderTextureHeight);
+
+		// Render bottom screen
+
+		n3ds_graphics::DrawBottomRenderTarget(0x000000ff);
+		n3ds_graphics::DrawQuad( // Logo
+			(GSP_SCREEN_HEIGHT_BOTTOM - logoQuadWidth) / 2.0f,
+			0,
+			logoQuadWidth,
+			GSP_SCREEN_WIDTH,
+			397.0f / renderTextureWidth,
+			329.0f / renderTextureHeight,
+			181.0f / renderTextureWidth,
+			160.0f / renderTextureHeight);
 
 		n3ds_graphics::FinishRender();
 	}
@@ -289,6 +320,11 @@ void winmain::PrintMessage(const char *message, ...)
 	va_start(args, message);
 	vprintf(message, args);
 	va_end(args);
+
+	// Initialize the console for printing error messages
+
+	if (Console == nullptr)
+		Console = consoleInit(GFX_TOP, NULL);
 
 	while (aptMainLoop())
 	{

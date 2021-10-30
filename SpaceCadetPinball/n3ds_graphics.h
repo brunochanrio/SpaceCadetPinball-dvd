@@ -11,23 +11,28 @@
 class n3ds_graphics
 {
 private:
-    static C3D_RenderTarget *target;
+    static C3D_RenderTarget *topRenderTarget;
+    static C3D_RenderTarget *bottomRenderTarget;
 
     static DVLB_s *vshader_dvlb;
     static shaderProgram_s program;
     static int8_t uLoc_projection;
     static int8_t uLoc_modelView;
     static int8_t uLoc_uvOffset;
-    static C3D_Mtx projection;
+    static C3D_Mtx topProjection;
+    static C3D_Mtx bottomProjection;
     static void *vbo_data;
 
 public:
     static void Initialize();
     static void Dispose();
     static void BeginRender();
+    static void DrawTopRenderTarget(uint32_t clearColor);
+    static void DrawBottomRenderTarget(uint32_t clearColor);
     static void FinishRender();
     static bool IsMainLoopRunning();
-    static void SetOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far);
+    static void SetTopOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far);
+    static void SetBottomOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far);
     static void SetModelViewMatrix(float x, float y, float w, float h);
     static void DrawQuad(float x, float y, float w, float h, float uvX, float uvY, float uvW, float uvH);
     static void CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter);

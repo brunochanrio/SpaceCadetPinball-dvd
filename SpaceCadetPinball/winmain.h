@@ -44,6 +44,7 @@ private:
 	static double UpdateToFrameRatio;
 	static DurationMs TargetFrameTime;
 	static struct optionsStruct &Options;
+	static struct PrintConsole *Console;
 
 	static void PrintMessage(const char *message, ...);
 };

@@ -7,14 +7,16 @@
 
 #include "vshader_shbin.h"
 
-C3D_RenderTarget *n3ds_graphics::target = nullptr;
+C3D_RenderTarget *n3ds_graphics::topRenderTarget = nullptr;
+C3D_RenderTarget *n3ds_graphics::bottomRenderTarget = nullptr;
 
 DVLB_s *n3ds_graphics::vshader_dvlb = nullptr;
 shaderProgram_s n3ds_graphics::program = {};
 int8_t n3ds_graphics::uLoc_projection = 0;
 int8_t n3ds_graphics::uLoc_modelView = 0;
 int8_t n3ds_graphics::uLoc_uvOffset = 0;
-C3D_Mtx n3ds_graphics::projection = {};
+C3D_Mtx n3ds_graphics::topProjection = {};
+C3D_Mtx n3ds_graphics::bottomProjection = {};
 void *n3ds_graphics::vbo_data = nullptr;
 
 typedef struct
@@ -39,14 +41,16 @@ void n3ds_graphics::Initialize()
 
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
-    // Initialize the render target
+    // Initialize the render targets
 
-    target = C3D_RenderTargetCreate(240, 400, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-    C3D_RenderTargetSetOutput(target, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+    topRenderTarget = C3D_RenderTargetCreate(GSP_SCREEN_WIDTH, GSP_SCREEN_HEIGHT_TOP, GPU_RB_RGBA8, GPU_RB_DEPTH16);
+    C3D_RenderTargetSetOutput(topRenderTarget, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+    bottomRenderTarget = C3D_RenderTargetCreate(GSP_SCREEN_WIDTH, GSP_SCREEN_HEIGHT_BOTTOM, GPU_RB_RGBA8, GPU_RB_DEPTH16);
+    C3D_RenderTargetSetOutput(bottomRenderTarget, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
 
     // Load the vertex shader, create a shader program and bind it
 
-    vshader_dvlb = DVLB_ParseFile((u32 *)vshader_shbin, vshader_shbin_size);
+    vshader_dvlb = DVLB_ParseFile((uint32_t *)vshader_shbin, vshader_shbin_size);
     shaderProgramInit(&program);
     shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
     C3D_BindProgram(&program);
@@ -104,8 +108,20 @@ void n3ds_graphics::Dispose()
 void n3ds_graphics::BeginRender()
 {
     C3D_FrameBegin(0);
-    C3D_RenderTargetClear(target, C3D_CLEAR_ALL, 0x000000ff, 0);
-    C3D_FrameDrawOn(target);
+}
+
+void n3ds_graphics::DrawTopRenderTarget(uint32_t clearColor)
+{
+    C3D_RenderTargetClear(topRenderTarget, C3D_CLEAR_ALL, clearColor, 0);
+    C3D_FrameDrawOn(topRenderTarget);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &topProjection);
+}
+
+void n3ds_graphics::DrawBottomRenderTarget(uint32_t clearColor)
+{
+    C3D_RenderTargetClear(bottomRenderTarget, C3D_CLEAR_ALL, clearColor, 0);
+    C3D_FrameDrawOn(bottomRenderTarget);
+    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &bottomProjection);
 }
 
 void n3ds_graphics::FinishRender()
@@ -118,10 +134,14 @@ bool n3ds_graphics::IsMainLoopRunning()
     return aptMainLoop();
 }
 
-void n3ds_graphics::SetOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
+void n3ds_graphics::SetTopOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
 {
-    Mtx_OrthoTilt(&projection, left, right, bottom, top, near, far, true);
-    C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, &projection);
+    Mtx_OrthoTilt(&topProjection, left, right, bottom, top, near, far, true);
+}
+
+void n3ds_graphics::SetBottomOrthoProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
+{
+    Mtx_OrthoTilt(&bottomProjection, left, right, bottom, top, near, far, true);
 }
 
 void n3ds_graphics::SetModelViewMatrix(float x, float y, float w, float h)
