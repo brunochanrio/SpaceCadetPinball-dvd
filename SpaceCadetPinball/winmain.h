@@ -11,7 +11,7 @@ struct SdlTickClock
 
 	static time_point now() noexcept
 	{
-		return time_point{duration{/*SDL_GetTicks()*/0}};
+		return time_point{duration{/*SDL_GetTicks()*/ 0}};
 	}
 };
 
@@ -27,14 +27,15 @@ public:
 	static bool LaunchBallEnabled;
 	static bool HighScoresEnabled;
 	static bool DemoActive;
-	static char* BasePath;
+	static char *BasePath;
 
 	static int WinMain(LPCSTR lpCmdLine);
-	[[ noreturn ]] static void memalloc_failure();
+	static void memalloc_failure();
 	static void end_pause();
 	static void new_game();
 	static void pause();
 	static void UpdateFrameRate();
+
 private:
 	static int bQuit, DispFrameRate, DispGRhistory, activated;
 	static int mouse_down, last_mouse_x, last_mouse_y, no_time_loss;
@@ -42,5 +43,7 @@ private:
 	static bool ShowSpriteViewer;
 	static double UpdateToFrameRatio;
 	static DurationMs TargetFrameTime;
-	static struct optionsStruct& Options;
+	static struct optionsStruct &Options;
+
+	static void PrintMessage(const char *message, ...);
 };

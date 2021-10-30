@@ -38,6 +38,12 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 {
 	std::set_new_handler(memalloc_failure);
 
+	// Initialize graphics and the console for printing error messages
+	gfxInitDefault();
+	consoleInit(GFX_TOP, NULL);
+
+	// Set the base path for PINBALL.DAT
+
 	BasePath = (char *)"SpaceCadetPinball/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
@@ -66,12 +72,11 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		if (pb::init())
 		{
-			fprintf(stderr, "Could not load game data: The .dat file is missing");
-			exit(EXIT_FAILURE);
+			PrintMessage("\x1b[14;0H  Could not load game data:\n  %s\n  file is missing.", DatFileName.c_str());
 		}
 	}
 
-	// Initialize graphics
+	// Initialize 3D graphics
 
 	n3ds_graphics::Initialize();
 
@@ -93,37 +98,39 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	uint8_t **swizzle = new uint8_t *[screenTextureSize];
 
-	uint32_t dstOffset = 0;
-	uint32_t widthCount = 0;
-	constexpr uint32_t tileSize = 8;
-	constexpr uint32_t subTileSize1 = 4;
-	constexpr uint32_t subTileSize2 = 2;
-	uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
-
-	for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
 	{
-		for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
-		{
-			for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
-			{
-				for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
-				{
-					for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
-					{
-						for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
-						{
-							for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
-							{
-								uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
-								swizzle[index + 0] = &renderTextureData[dstOffset + 0];
-								swizzle[index + 1] = &renderTextureData[dstOffset + 4];
+		uint32_t dstOffset = 0;
+		uint32_t widthCount = 0;
+		constexpr uint32_t tileSize = 8;
+		constexpr uint32_t subTileSize1 = 4;
+		constexpr uint32_t subTileSize2 = 2;
+		uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
 
-								dstOffset += 8;
-								widthCount += 8;
-								if (widthCount == widthBytes)
+		for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
+		{
+			for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
+			{
+				for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
+				{
+					for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
+					{
+						for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
+						{
+							for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
+							{
+								for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
 								{
-									dstOffset += (renderTextureWidth - render::vscreen->Width) << 5;
-									widthCount = 0;
+									uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
+									swizzle[index + 0] = &renderTextureData[dstOffset + 0];
+									swizzle[index + 1] = &renderTextureData[dstOffset + 4];
+
+									dstOffset += 8;
+									widthCount += 8;
+									if (widthCount == widthBytes)
+									{
+										dstOffset += (renderTextureWidth - render::vscreen->Width) << 5;
+										widthCount = 0;
+									}
 								}
 							}
 						}
@@ -230,6 +237,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 	C3D_TexDelete(&renderTextureObject);
 	linearFree(renderTextureData);
 	n3ds_graphics::Dispose();
+	gfxExit();
 
 	printf("Finished uninitializing.");
 
@@ -242,8 +250,8 @@ void winmain::memalloc_failure()
 	Sound::Close();
 	char *caption = pinball::get_rc_string(170, 0);
 	char *text = pinball::get_rc_string(179, 0);
-	fprintf(stderr, "%s %s\n", caption, text);
-	exit(EXIT_FAILURE);
+
+	PrintMessage("\x1b[14;0H  %s\n  %s", caption, text);
 }
 
 void winmain::end_pause()
@@ -273,4 +281,30 @@ void winmain::UpdateFrameRate()
 	auto fps = Options.FramesPerSecond, ups = Options.UpdatesPerSecond;
 	UpdateToFrameRatio = static_cast<double>(ups) / fps;
 	TargetFrameTime = DurationMs(1000.0 / ups);
+}
+
+void winmain::PrintMessage(const char *message, ...)
+{
+	va_list args;
+	va_start(args, message);
+	vprintf(message, args);
+	va_end(args);
+
+	while (aptMainLoop())
+	{
+		hidScanInput();
+		uint32_t kDown = hidKeysDown();
+
+		if (kDown & KEY_START)
+			break;
+
+		gfxFlushBuffers();
+		gfxSwapBuffers();
+
+		gspWaitForVBlank();
+	}
+
+	gfxExit();
+	exit(EXIT_FAILURE);
+	//svcBreak(USERBREAK_ASSERT);
 }

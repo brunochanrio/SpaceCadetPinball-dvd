@@ -37,7 +37,6 @@ void n3ds_graphics::Initialize()
 {
     // Initialize graphics
 
-    gfxInitDefault();
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
     // Initialize the render target
@@ -100,7 +99,6 @@ void n3ds_graphics::Dispose()
     // Deinitialize graphics
 
     C3D_Fini();
-    gfxExit();
 }
 
 void n3ds_graphics::BeginRender()
@@ -152,7 +150,6 @@ void n3ds_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, 
         svcOutputDebugString(message.c_str(), message.length());
     }
 
-    //C3D_TexUpload(textureObject, textureData);
     C3D_TexSetFilter(textureObject, filter, filter);
     C3D_TexSetWrap(textureObject, wrap, wrap);
 }

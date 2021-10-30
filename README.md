@@ -41,7 +41,7 @@ Even though devkitPro offers a Windows installer, I've had some issues setting i
 10. Install SDL_mixer with `sudo dkp-pacman -S 3ds-sdl_mixer`.
 11. Set the DEVKITPRO environment variables so the system knows where the compilers and libraries are installed with these commands:
     - `export DEVKITPRO=/opt/devkitpro`.
-    - `export DEVKITPPC=/opt/devkitpro/devkitARM`.
+    - `export DEVKITARM=/opt/devkitpro/devkitARM`.
 12. Build the project with the command `make -j4`.
 
 After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, which is the main executable.
