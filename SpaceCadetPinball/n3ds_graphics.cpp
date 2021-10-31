@@ -162,7 +162,7 @@ void n3ds_graphics::DrawQuad(float x, float y, float w, float h, float uvX, floa
 
 void n3ds_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter)
 {
-    bool success = C3D_TexInit(textureObject, width, height, format);
+    bool success = C3D_TexInitVRAM(textureObject, width, height, format);
 
     if (!success)
     {
@@ -177,7 +177,7 @@ void n3ds_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, 
 void n3ds_graphics::UploadTextureObject(C3D_Tex *textureObject, uint8_t *textureData)
 {
     C3D_TexUpload(textureObject, textureData);
-    //C3D_TexFlush(&textureObject);
+    //C3D_TexFlush(textureObject);
 }
 
 void n3ds_graphics::BindTextureObject(C3D_Tex *textureObject, int32_t mapIndex)
