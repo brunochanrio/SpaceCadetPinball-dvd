@@ -449,6 +449,7 @@ void DatFile::Finalize()
 		else
 		{
 			// PINBALL2.MID is an alternative font provided in 3DPB data
+			// Scaled down because it is too large for top text box
 
 			auto file = pinball::make_path_name("PINBALL2.MID");
 			auto fileHandle = fopen(file.c_str(), "rb");
@@ -459,7 +460,11 @@ void DatFile::Finalize()
 			fread(rcData, 1, fileSize, fileHandle);
 			fclose(fileHandle);
 
+			auto groupId = Groups.back()->GroupId + 1u;
 			AddMsgFont(rcData, "pbmsg_ft", true);
+
+			for (auto i = groupId; i < Groups.size(); i++)
+				Groups[i]->GetBitmap(0)->ScaleIndexed(0.84f, 0.84f);
 		}
 
 		delete[] rcData;
