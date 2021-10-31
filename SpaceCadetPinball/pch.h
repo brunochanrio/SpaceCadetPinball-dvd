@@ -34,6 +34,14 @@
 #include "SDL.h"
 #include <SDL_mixer.h>
 
+// MIX_INIT_FLUIDSYNTH was renamed to MIX_INIT_MID in SDL_mixer v2.0.2
+constexpr int MIX_INIT_MID_Proxy =
+#if SDL_MIXER_PATCHLEVEL >= 2
+	MIX_INIT_MID;
+#else
+	MIX_INIT_FLUIDSYNTH;
+#endif
+
 //https://github.com/ocornut/imgui 7b913db1ce9dd2fd98e5790aa59974dd4496be3b
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -67,6 +75,12 @@ inline size_t pgm_save(int width, int height, char* data, FILE* outfile)
 inline float RandFloat()
 {
 	return static_cast<float>(std::rand() / static_cast<double>(RAND_MAX));
+}
+
+template <typename T> constexpr
+int Sign(T val)
+{
+	return (T(0) < val) - (val < T(0));
 }
 
 #endif //PCH_H

@@ -57,10 +57,11 @@ int fullscrn::enableFullscreen()
 {
 	if (!display_changed)
 	{
-		SDL_SetWindowFullscreen(winmain::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		display_changed = 1;
-		if (display_changed)
+		if (SDL_SetWindowFullscreen(winmain::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP) == 0)
+		{
+			display_changed = 1;
 			return 1;
+		}
 	}
 	return 0;
 }
@@ -69,8 +70,8 @@ int fullscrn::disableFullscreen()
 {
 	if (display_changed)
 	{
-		SDL_SetWindowFullscreen(winmain::MainWindow, 0);
-		display_changed = 0;
+		if (SDL_SetWindowFullscreen(winmain::MainWindow, 0) == 0)
+			display_changed = 0;
 	}
 
 	return 0;
@@ -109,6 +110,8 @@ void fullscrn::window_size_changed()
 {
 	int width, height;
 	SDL_GetRendererOutputSize(winmain::Renderer, &width, &height);
+	int menuHeight = options::Options.ShowMenu ? winmain::MainMenuHeight : 0;
+	height -= menuHeight;
 	auto res = &resolution_array[resolution];
 	ScaleX = static_cast<float>(width) / res->TableWidth;
 	ScaleY = static_cast<float>(height) / res->TableHeight;
@@ -123,7 +126,7 @@ void fullscrn::window_size_changed()
 
 	render::DestinationRect = SDL_Rect
 	{
-		OffsetX, OffsetY,
+		OffsetX, OffsetY + menuHeight,
 		width - OffsetX * 2, height - OffsetY * 2
 	};
 }

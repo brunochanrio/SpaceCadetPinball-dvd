@@ -37,7 +37,7 @@ void TPlunger::Collision(TBall* ball, vector_type* nextPosition, vector_type* di
 {
 	if (PinballTable->TiltLockFlag)
 		Message(1017, 0.0);
-	coef = RandFloat() * Boost * 0.1f + Boost;
+	coef = RandFloat() * Boost * 0.1f + Boost; // it is intended that the passed in coef is never used!
 	maths::basic_collision(ball, nextPosition, direction, Elasticity, Smoothness, Threshold, coef);
 }
 
@@ -54,28 +54,6 @@ int TPlunger::Message(int code, float value)
 			PullbackTimer(0, this);
 		}
 		return 0;
-	case 1005:
-	case 1009:
-	case 1010:
-		{
-			Threshold = 0.0;
-			if (PullbackTimer_)
-				timer::kill(PullbackTimer_);
-			PullbackTimer_ = 0;
-			if (code == 1005)
-				loader::play_sound(SoundIndexP2);
-			auto bmp = ListBitmap->at(0);
-			auto zMap = ListZMap->at(0);
-			render::sprite_set(
-				RenderSprite,
-				bmp,
-				zMap,
-				bmp->XPosition - PinballTable->XOffset,
-				bmp->YPosition - PinballTable->YOffset);
-
-			timer::set(Unknown4F, this, PlungerReleasedTimer);
-			break;
-		}
 	case 1015:
 		{
 			auto ball = PinballTable->BallList.at(0);
@@ -100,11 +78,18 @@ int TPlunger::Message(int code, float value)
 		Boost = static_cast<float>(MaxPullback);
 		timer::set(0.2f, this, PlungerReleasedTimer);
 		break;
+	case 1005:
+	case 1009:
+	case 1010:
 	case 1024:
 		{
-			if (BallFeedTimer_)
-				timer::kill(BallFeedTimer_);
-			BallFeedTimer_ = 0;
+			if (code == 1024)
+			{
+				if (BallFeedTimer_)
+					timer::kill(BallFeedTimer_);
+				BallFeedTimer_ = 0;
+			}
+
 			Threshold = 0.0;
 			if (PullbackTimer_)
 				timer::kill(PullbackTimer_);
