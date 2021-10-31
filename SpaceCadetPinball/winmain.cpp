@@ -215,6 +215,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		float tableQuadWidth = GSP_SCREEN_WIDTH * (360.0f / render::vscreen->Height);
 		float infoQuadWidth = GSP_SCREEN_HEIGHT_TOP - tableQuadWidth - 6.0f;
+		float infoQuadHeight = infoQuadWidth / (203.0f / 219.0f);
 		float logoQuadWidth = GSP_SCREEN_WIDTH * (181.0f / 160.0f);
 
 		n3ds_graphics::DrawTopRenderTarget(0x000000ff);
@@ -230,13 +231,13 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		n3ds_graphics::DrawQuad( // Info
 			GSP_SCREEN_HEIGHT_TOP - infoQuadWidth,
-			0,
+			GSP_SCREEN_WIDTH - infoQuadHeight,
 			infoQuadWidth,
-			GSP_SCREEN_WIDTH,
+			infoQuadHeight,
 			386.0f / renderTextureWidth,
-			111.0f / renderTextureHeight,
+			106.0f / renderTextureHeight,
 			203.0f / renderTextureWidth,
-			214.0f / renderTextureHeight);
+			219.0f / renderTextureHeight);
 
 		// Render bottom screen
 
