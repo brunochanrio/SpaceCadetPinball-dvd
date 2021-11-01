@@ -211,7 +211,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		// Render top screen
 
-		n3ds_graphics::BeginRender();
+		n3ds_graphics::BeginRender(single_step);
 
 		float tableQuadWidth = GSP_SCREEN_WIDTH * (360.0f / render::vscreen->Height);
 		float infoQuadWidth = GSP_SCREEN_HEIGHT_TOP - tableQuadWidth - 6.0f;

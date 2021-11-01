@@ -105,9 +105,9 @@ void n3ds_graphics::Dispose()
     C3D_Fini();
 }
 
-void n3ds_graphics::BeginRender()
+void n3ds_graphics::BeginRender(bool vSync)
 {
-    C3D_FrameBegin(0);
+    C3D_FrameBegin(vSync ? C3D_FRAME_SYNCDRAW : 0);
 }
 
 void n3ds_graphics::DrawTopRenderTarget(uint32_t clearColor)

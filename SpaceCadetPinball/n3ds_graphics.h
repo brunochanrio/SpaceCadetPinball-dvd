@@ -26,7 +26,7 @@ private:
 public:
     static void Initialize();
     static void Dispose();
-    static void BeginRender();
+    static void BeginRender(bool vSync);
     static void DrawTopRenderTarget(uint32_t clearColor);
     static void DrawBottomRenderTarget(uint32_t clearColor);
     static void FinishRender();
