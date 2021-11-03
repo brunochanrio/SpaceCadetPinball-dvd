@@ -325,7 +325,7 @@ void pb::pause_continue()
 		if (MainTable)
 			MainTable->Message(1008, time_now);
 		pinball::InfoTextBox->Display(pinball::get_rc_string(22, 0), -1.0);
-		midi::music_stop();
+		midi::music_pause();
 		Sound::Deactivate();
 	}
 	else
@@ -349,7 +349,7 @@ void pb::pause_continue()
 			pinball::InfoTextBox->Display(text, textTime);
 		}
 		if (options::Options.Music && !winmain::single_step)
-			midi::play_pb_theme();
+			midi::music_resume();
 		Sound::Activate();
 	}
 }

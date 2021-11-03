@@ -7,8 +7,8 @@ int* Sound::TimeStamps = nullptr;
 
 bool Sound::Init(int channels, bool enableFlag)
 {
-	Mix_Init(MIX_INIT_OGG);
 	auto result = Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
+	Mix_Init(MIX_INIT_OGG);
 	SetChannels(channels);
 	Enable(enableFlag);
 	return !result;
@@ -35,8 +35,8 @@ void Sound::Close()
 {
 	delete[] TimeStamps;
 	TimeStamps = nullptr;
-	Mix_CloseAudio();
 	Mix_Quit();
+	Mix_CloseAudio();
 }
 
 void Sound::PlaySound(Mix_Chunk* wavePtr, int time)

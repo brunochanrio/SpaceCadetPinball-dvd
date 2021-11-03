@@ -88,6 +88,8 @@ class midi
 public:
 	static int play_pb_theme();
 	static int music_stop();
+	static void music_pause();
+	static void music_resume();
 	static int music_init();
 	static void music_shutdown();
 private:

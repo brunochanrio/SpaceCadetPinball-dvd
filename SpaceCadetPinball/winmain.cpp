@@ -257,13 +257,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	printf("Uninitializing...");
 
-	end_pause();
-
 	options::uninit();
-	midi::music_shutdown();
 	pb::uninit();
+	midi::music_shutdown();
 	Sound::Close();
-	n3ds_graphics::Dispose();
 
 	delete[] swizzle;
 	C3D_TexDelete(&renderTextureObject);

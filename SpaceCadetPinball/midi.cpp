@@ -47,6 +47,24 @@ int midi::music_stop()
 	return true;
 }
 
+void midi::music_pause()
+{
+	if (!active_track)
+		return;
+
+	if (!Mix_PausedMusic())
+		Mix_PauseMusic();
+}
+
+void midi::music_resume()
+{
+	if (!active_track)
+		return;
+
+	if (Mix_PausedMusic())
+		Mix_ResumeMusic();
+}
+
 int midi::music_init()
 {
 	active_track = nullptr;
@@ -73,13 +91,16 @@ int midi::music_init()
 void midi::music_shutdown()
 {
 	if (active_track)
+	{
 		Mix_HaltMusic();
+		active_track = nullptr;
+	}
 
 	for (auto midi : LoadedTracks)
 	{
 		Mix_FreeMusic(midi);
 	}
-	active_track = nullptr;
+
 	LoadedTracks.clear();
 }
 
