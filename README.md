@@ -5,7 +5,7 @@ This is a port of 3D Pinball - Space Cadet for Nintendo 3DS. It's originally a g
 - No menus, options, or results screen.
 - It plays sound effects and music (if the player supplies the music in OGG format).
 - There are still some bugs here and there.
-- It runs slow.
+- It should be running fine on New 3DS, but on a regular 3DS it runs slow.
 
 It is based on the PC decompilation made by [k4zmu2a](https://github.com/k4zmu2a): https://github.com/k4zmu2a/SpaceCadetPinball
 
@@ -47,6 +47,17 @@ Even though devkitPro offers a Windows installer, I've had some issues setting i
 After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, which is the main executable.
 
 ## How to run
+
+### 3DS with Homebrew Launcher
+
+1. Go to your SD card and enter the `3ds` folder.
+2. Copy `SpaceCadetPinbal.3dsx` into the `3ds` folder.
+3. Make sure you have your `dspfirm.cdc` in the `3ds` folder, as you will need it to have sound in homebrew games. If you don't have it, [dump your DSP](https://github.com/zoogie/DSP1/releases/latest).
+4. Inside the `3ds` folder, create a new folder named `SpaceCadetPinball`.
+5. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
+6. Copy all files from the original PC version into the `SpaceCadetPinball` folder that was created earlier.
+7. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder.
+8. If everything went fine, you should be able to run the game from the Homebrew Launcher.
 
 ### Citra
 
