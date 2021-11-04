@@ -118,6 +118,23 @@ DatFile* partman::load_records(LPCSTR lpFileName, bool fullTiltMode)
 					break;
 				}
 				fread(entryBuffer, 1, fieldSize, fileHandle);
+
+				if (entryType == FieldTypes::Palette)
+				{
+					// Convert from ARGB to RGBA
+
+					for (size_t i = 0; i < fieldSize; i += 4)
+					{
+						char c1 = entryBuffer[i + 0];
+						char c2 = entryBuffer[i + 1];
+						char c3 = entryBuffer[i + 2];
+						char c4 = entryBuffer[i + 3];
+						entryBuffer[i + 0] = c4;
+						entryBuffer[i + 1] = c1;
+						entryBuffer[i + 2] = c2;
+						entryBuffer[i + 3] = c3;
+					}
+				}
 			}
 
 			groupData->AddEntry(entryData);

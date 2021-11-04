@@ -174,7 +174,7 @@ void n3ds_graphics::CreateTextureObject(C3D_Tex *textureObject, uint16_t width, 
     C3D_TexSetWrap(textureObject, wrap, wrap);
 }
 
-void n3ds_graphics::UploadTextureObject(C3D_Tex *textureObject, uint8_t *textureData)
+void n3ds_graphics::UploadTextureObject(C3D_Tex *textureObject, void *textureData)
 {
     C3D_TexUpload(textureObject, textureData);
     //C3D_TexFlush(textureObject);

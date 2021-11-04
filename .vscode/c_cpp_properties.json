@@ -8,7 +8,9 @@
                 "${DEVKITPRO}/portlibs/3ds/include/**",
                 "${workspaceFolder}/build/"
             ],
-            "defines": [],
+            "defines": [
+                "__3DS__"
+            ],
             "compilerPath": "${DEVKITPRO}/devkitARM/bin/arm-none-eabi-g++",
             "compilerArgs": []
         }

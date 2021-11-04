@@ -36,7 +36,7 @@ public:
     static void SetModelViewMatrix(float x, float y, float w, float h);
     static void DrawQuad(float x, float y, float w, float h, float uvX, float uvY, float uvW, float uvH);
     static void CreateTextureObject(C3D_Tex *textureObject, uint16_t width, uint16_t height, GPU_TEXCOLOR format, GPU_TEXTURE_WRAP_PARAM wrap, GPU_TEXTURE_FILTER_PARAM filter);
-    static void UploadTextureObject(C3D_Tex *textureObject, uint8_t *textureData);
+    static void UploadTextureObject(C3D_Tex *textureObject, void *textureData);
     static void BindTextureObject(C3D_Tex *textureObject, int32_t mapIndex);
     static uint32_t GetTextureSize(uint16_t width, uint16_t height, GPU_TEXCOLOR format, int32_t maxLevel);
 };

@@ -197,13 +197,18 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 			// 	}
 			// }
 
-			for (uint32_t i = 0; i < screenTextureSize; i++)
+			for (uint32_t i = 0; i < screenTextureSize; i += 16)
 			{
-				Rgba color = render::vscreen->BmpBufPtr1[i].rgba;
-				*(swizzle[i] + 0) = color.Alpha;
-				*(swizzle[i] + 1) = color.Blue;
-				*(swizzle[i] + 2) = color.Green;
-				*(swizzle[i] + 3) = color.Red;
+				uint32_t *src = &render::vscreen->BmpBufPtr1[i].Color;
+				uint8_t **dst = &swizzle[i];
+				memcpy(dst[0], &src[0], 8);
+				memcpy(dst[2], &src[2], 8);
+				memcpy(dst[4], &src[4], 8);
+				memcpy(dst[6], &src[6], 8);
+				memcpy(dst[8], &src[8], 8);
+				memcpy(dst[10], &src[10], 8);
+				memcpy(dst[12], &src[12], 8);
+				memcpy(dst[14], &src[14], 8);
 			}
 
 			n3ds_graphics::UploadTextureObject(&renderTextureObject, renderTextureData);
