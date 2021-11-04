@@ -85,7 +85,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// Texture data and create texture object
 
-	uint32_t screenTextureSize = render::vscreen->Width * render::vscreen->Height;
+	uint32_t screenTexturePixelCount = render::vscreen->Width * render::vscreen->Height;
 
 	constexpr uint16_t renderTextureWidth = 1024;
 	constexpr uint16_t renderTextureHeight = 512;
@@ -99,49 +99,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// Precalculate the Morton swizzle
 
-	uint8_t **swizzle = new uint8_t *[screenTextureSize];
-
-	{
-		uint32_t dstOffset = 0;
-		uint32_t widthCount = 0;
-		constexpr uint32_t tileSize = 8;
-		constexpr uint32_t subTileSize1 = 4;
-		constexpr uint32_t subTileSize2 = 2;
-		uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
-
-		for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
-		{
-			for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
-			{
-				for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
-				{
-					for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
-					{
-						for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
-						{
-							for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
-							{
-								for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
-								{
-									uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
-									swizzle[index + 0] = &renderTextureData[dstOffset + 0];
-									swizzle[index + 1] = &renderTextureData[dstOffset + 4];
-
-									dstOffset += 8;
-									widthCount += 8;
-									if (widthCount == widthBytes)
-									{
-										dstOffset += (renderTextureWidth - render::vscreen->Width) << 5;
-										widthCount = 0;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	uint8_t **swizzle = GenerateMortonSwizzle(renderTextureData, renderTextureWidth, screenTexturePixelCount);
 
 	// Initialize input
 
@@ -184,33 +142,9 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 			pb::frame(1000.0f / 60.0f);
 
-			// Copy game screen buffer to texture
+			// Swizzle the texture, copy it to render texture and upload
 
-			// for (int32_t y = 0; y < render::vscreen->Height; y++)
-			// {
-			// 	for (int32_t x = 0; x < render::vscreen->Width; x++)
-			// 	{
-			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Alpha = 0xFF;
-			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Blue = 0x00;
-			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Green = y & 0xff;
-			// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Red = x & 0xff;
-			// 	}
-			// }
-
-			for (uint32_t i = 0; i < screenTextureSize; i += 16)
-			{
-				uint32_t *src = &render::vscreen->BmpBufPtr1[i].Color;
-				uint8_t **dst = &swizzle[i];
-				memcpy(dst[0], &src[0], 8);
-				memcpy(dst[2], &src[2], 8);
-				memcpy(dst[4], &src[4], 8);
-				memcpy(dst[6], &src[6], 8);
-				memcpy(dst[8], &src[8], 8);
-				memcpy(dst[10], &src[10], 8);
-				memcpy(dst[12], &src[12], 8);
-				memcpy(dst[14], &src[14], 8);
-			}
-
+			SwizzleAndCopy(swizzle, screenTexturePixelCount);
 			n3ds_graphics::UploadTextureObject(&renderTextureObject, renderTextureData);
 		}
 
@@ -315,6 +249,81 @@ void winmain::UpdateFrameRate()
 	auto fps = Options.FramesPerSecond, ups = Options.UpdatesPerSecond;
 	UpdateToFrameRatio = static_cast<double>(ups) / fps;
 	TargetFrameTime = DurationMs(1000.0 / ups);
+}
+
+uint8_t **winmain::GenerateMortonSwizzle(uint8_t *renderTextureData, const uint16_t renderTextureWidth, const uint32_t screenTexturePixelCount)
+{
+	uint8_t **swizzle = new uint8_t *[screenTexturePixelCount >> 1];
+
+	uint32_t dstOffset = 0;
+	uint32_t widthCount = 0;
+	constexpr uint32_t tileSize = 8;
+	constexpr uint32_t subTileSize1 = 4;
+	constexpr uint32_t subTileSize2 = 2;
+	uint32_t widthBytes = render::vscreen->Width * tileSize * 4;
+
+	for (int32_t y = 0; y < render::vscreen->Height; y += tileSize)
+	{
+		for (int32_t x = 0; x < render::vscreen->Width; x += tileSize)
+		{
+			for (uint8_t ty = 0; ty < tileSize; ty += subTileSize1)
+			{
+				for (uint8_t tx = 0; tx < tileSize; tx += subTileSize1)
+				{
+					for (uint8_t sty1 = 0; sty1 < subTileSize1; sty1 += subTileSize2)
+					{
+						for (uint8_t stx1 = 0; stx1 < subTileSize1; stx1 += subTileSize2)
+						{
+							for (uint8_t sty2 = 0; sty2 < subTileSize2; sty2++)
+							{
+								uint32_t index = (y + ty + sty1 + sty2) * render::vscreen->Width + (x + tx + stx1);
+								swizzle[index >> 1] = &renderTextureData[dstOffset + 0];
+								//swizzle[index + 1] = &renderTextureData[dstOffset + 4];
+
+								dstOffset += 8;
+								widthCount += 8;
+								if (widthCount == widthBytes)
+								{
+									dstOffset += (renderTextureWidth - render::vscreen->Width) << 5;
+									widthCount = 0;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return swizzle;
+}
+
+void winmain::SwizzleAndCopy(uint8_t **swizzle, const uint32_t screenTexturePixelCount)
+{
+	// for (int32_t y = 0; y < render::vscreen->Height; y++)
+	// {
+	// 	for (int32_t x = 0; x < render::vscreen->Width; x++)
+	// 	{
+	// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Alpha = 0xFF;
+	// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Blue = 0x00;
+	// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Green = y & 0xff;
+	// 		render::vscreen->BmpBufPtr1[y * render::vscreen->Width + x].rgba.Red = x & 0xff;
+	// 	}
+	// }
+
+	for (uint32_t i = 0; i < screenTexturePixelCount; i += 16)
+	{
+		uint32_t *src = &render::vscreen->BmpBufPtr1[i].Color;
+		uint8_t **dst = &swizzle[i >> 1];
+		memcpy(dst[0], &src[0], 8);
+		memcpy(dst[1], &src[2], 8);
+		memcpy(dst[2], &src[4], 8);
+		memcpy(dst[3], &src[6], 8);
+		memcpy(dst[4], &src[8], 8);
+		memcpy(dst[5], &src[10], 8);
+		memcpy(dst[6], &src[12], 8);
+		memcpy(dst[7], &src[14], 8);
+	}
 }
 
 void winmain::PrintMessage(const char *message, ...)
