@@ -56,7 +56,7 @@ After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, w
 4. Inside the `3ds` folder, create a new folder named `SpaceCadetPinball`.
 5. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
 6. Copy all files from the original PC version into the `SpaceCadetPinball` folder that was created earlier.
-7. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder.
+7. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
 8. If everything went fine, you should be able to run the game from the Homebrew Launcher.
 
 ### Citra
@@ -66,7 +66,7 @@ After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, w
 3. Go to the `sdmc` folder and create a new folder there named `SpaceCadetPinball`.
 4. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
 5. Copy all PC game's assets to to the `SpaceCadetPinball` folder that was created earlier.
-6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder.
+6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
 7. Create a new folder named `3ds` inside the `sdmc` folder, and create an empty file there named `dspfirm.cdc`. This will allow to have audio in homebrew apps.
 8. If everything went fine, you should be able to run the game.
 
