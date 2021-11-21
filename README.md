@@ -42,7 +42,8 @@ Even though devkitPro offers a Windows installer, I've had some issues setting i
 11. Set the DEVKITPRO environment variables so the system knows where the compilers and libraries are installed with these commands:
     - `export DEVKITPRO=/opt/devkitpro`.
     - `export DEVKITARM=/opt/devkitpro/devkitARM`.
-12. Build the project with the command `make -j4`.
+12. To generate Build the project with the command `make -j4`.
+13. Optionally, to generate a CIA file, you will need to have [bannertool](https://github.com/Steveice10/bannertool/releases/) and [makerom](https://github.com/3DSGuy/Project_CTR/releases) in the `$DEVKITPRO/tools/bin` folder. Then build the project with the command `make -j4 BUILD_CIA=1`.
 
 After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, which is the main executable.
 
@@ -72,15 +73,15 @@ After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, w
 
 ## How to play
 
-```
-A                    :  Launch the ball
-L                    :  Move the left paddle
-R                    :  Move the right paddle
-DPAD Left, Right, Up :  Bump table
-X                    :  Start a new game
-Y                    :  Exit game
-Start                :  Pause
-```
+| Button               | Action                                            |
+|----------------------|---------------------------------------------------|
+| A                    | Launch the ball                                   |
+| L                    | Move the left paddle                              |
+| R                    | Move the right paddle                             |
+| DPad Left, Right, Up | Bump table                                        |
+| X                    | Start a new game                                  |
+| Y                    | Exit the game                                     |
+| Start                | Pause                                             |
 
 ## Screenshots
 
