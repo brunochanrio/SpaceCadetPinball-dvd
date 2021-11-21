@@ -28,6 +28,7 @@ public:
 	static bool HighScoresEnabled;
 	static bool DemoActive;
 	static char *BasePath;
+	static bool IsNew3DS;
 
 	static int WinMain(LPCSTR lpCmdLine);
 	static void memalloc_failure();

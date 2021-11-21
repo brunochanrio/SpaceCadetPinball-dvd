@@ -29,6 +29,7 @@ bool winmain::LaunchBallEnabled = true;
 bool winmain::HighScoresEnabled = true;
 bool winmain::DemoActive = false;
 char *winmain::BasePath;
+bool winmain::IsNew3DS = false;
 std::string winmain::FpsDetails;
 double winmain::UpdateToFrameRatio;
 winmain::DurationMs winmain::TargetFrameTime;
@@ -39,7 +40,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 {
 	std::set_new_handler(memalloc_failure);
 
-	osSetSpeedupEnable(true);
+	// Enable high speed mode for New 3DS
+
+	APT_CheckNew3DS(&IsNew3DS);
+	osSetSpeedupEnable(IsNew3DS);
 
 	// Initialize graphics
 	gfxInitDefault();
@@ -155,7 +159,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		// Render top screen
 
-		n3ds_graphics::BeginRender(single_step);
+		n3ds_graphics::BeginRender(IsNew3DS ? true : single_step);
 
 		float tableQuadWidth = GSP_SCREEN_WIDTH * (360.0f / render::vscreen->Height);
 		float infoQuadWidth = GSP_SCREEN_HEIGHT_TOP - tableQuadWidth - 6.0f;
