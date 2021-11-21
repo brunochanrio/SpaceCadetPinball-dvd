@@ -162,13 +162,13 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 		n3ds_graphics::BeginRender(IsNew3DS ? true : single_step);
 
 		float tableQuadWidth = GSP_SCREEN_WIDTH * (360.0f / render::vscreen->Height);
-		float infoQuadWidth = GSP_SCREEN_HEIGHT_TOP - tableQuadWidth - 6.0f;
+		float infoQuadWidth = GSP_SCREEN_HEIGHT_TOP - tableQuadWidth - 24.0f;
 		float infoQuadHeight = infoQuadWidth / (203.0f / 219.0f);
 		float logoQuadWidth = GSP_SCREEN_WIDTH * (181.0f / 160.0f);
 
 		n3ds_graphics::DrawTopRenderTarget(0x000000ff);
 		n3ds_graphics::DrawQuad( // Table
-			3.0f + render::get_offset_x(),
+			16.0f + render::get_offset_x(),
 			-render::get_offset_y(),
 			tableQuadWidth,
 			GSP_SCREEN_WIDTH,
