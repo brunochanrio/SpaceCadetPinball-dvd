@@ -11,6 +11,13 @@
             "problemMatcher": []
         },
         {
+            "label": "Build CIA",
+            "type": "shell",
+            "command": "make -j8 V=1 BUILD_CIA=1",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
             "label": "Clean",
             "type": "shell",
             "command": "make clean",

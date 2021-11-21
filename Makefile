@@ -24,7 +24,6 @@ include $(DEVKITARM)/3ds_rules
 #   If set to $(BUILD), it will statically link in the converted
 #   files as if they were data files.
 #
-# NO_SMDH: if set to anything, no SMDH file is generated.
 # ROMFS is the directory which contains the RomFS, relative to the Makefile (Optional)
 # APP_TITLE is the name of the app stored in the SMDH file (Optional)
 # APP_DESCRIPTION is the description of the app stored in the SMDH file (Optional)
@@ -61,6 +60,11 @@ APP_ICON			:=	$(TOPDIR)/ctr/icon.png
 BANNER_IMAGE_FILE	:=	$(TOPDIR)/ctr/banner.png
 BANNER_AUDIO_FILE	:=	$(TOPDIR)/ctr/audio_silent.wav
 
+#---------------------------------------------------------------------------------
+# Build options
+#---------------------------------------------------------------------------------
+
+BUILD_CIA ?= 0
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -156,8 +160,6 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-#export _3DSXDEPS	:=	$(if $(NO_SMDH),,$(OUTPUT).smdh)
-
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.png)
 	ifneq (,$(findstring $(TARGET).png,$(icons)))
@@ -171,9 +173,7 @@ else
 	export APP_ICON := $(TOPDIR)/$(ICON)
 endif
 
-ifeq ($(strip $(NO_SMDH)),)
-	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
-endif
+export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
 
 ifneq ($(ROMFS),)
 	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
@@ -245,6 +245,8 @@ endif
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
+ifeq ($(BUILD_CIA),1)
+
 .PHONY : all
 
 all				:	$(OUTPUT).3dsx $(OUTPUT).cia
@@ -257,13 +259,23 @@ $(OUTPUT).elf	:	$(OFILES)
 
 $(OUTPUT).cia		:	$(OUTPUT).elf $(OUTPUT).bnr $(OUTPUT).smdh
 	@$(MAKEROM) -f cia -o $(OUTPUT).cia -DAPP_ENCRYPTED=false $(COMMON_MAKEROM_PARAMS)
-	@echo "built ... spacecadetpinball.cia"
+	@echo "built ... $(OUTPUT).cia"
 
 $(OUTPUT).bnr : $(BANNER_IMAGE_FILE) $(BANNER_AUDIO_FILE)
 	@$(BANNERTOOL) makebanner $(BANNER_IMAGE_ARG) $(BANNER_AUDIO_ARG) -o $(OUTPUT).bnr > /dev/null
 
 $(OUTPUT).smdh : $(APP_ICON)
 	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i $(APP_ICON) -o $(OUTPUT).smdh > /dev/null
+
+else
+
+$(OUTPUT).3dsx	:	$(OUTPUT).elf $(OUTPUT).smdh
+
+$(OFILES_SOURCES) : $(HFILES)
+
+$(OUTPUT).elf	:	$(OFILES)
+
+endif
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
