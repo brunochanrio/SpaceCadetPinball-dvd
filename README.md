@@ -64,12 +64,13 @@ After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, w
 
 1. Get the [Citra emulator](https://citra-emu.org/download/) if you don't have it.
 2. Open it and go to the menu `File/Open Citra Folder`. This will open the folder where Citra's configuration is stored.
-3. Go to the `sdmc` folder and create a new folder there named `SpaceCadetPinball`.
-4. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
-5. Copy all PC game's assets to to the `SpaceCadetPinball` folder that was created earlier.
-6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
-7. Create a new folder named `3ds` inside the `sdmc` folder, and create an empty file there named `dspfirm.cdc`. This will allow to have audio in homebrew apps.
-8. If everything went fine, you should be able to run the game.
+3. Go to the `sdmc` folder and create a new folder there named `3ds` if it doesn't exist already.
+4. Enter the `3ds` folder and create an empty file there named `dspfirm.cdc`. This will allow to have audio in homebrew apps.
+5. Inside the `3ds` folder create another folder named `SpaceCadetPinball`.
+6. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
+7. Copy all PC game's assets to the `SpaceCadetPinball` folder that was created earlier.
+8. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
+9. If everything went fine, you should be able to run the game.
 
 ## How to play
 
