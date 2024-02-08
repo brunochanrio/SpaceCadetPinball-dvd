@@ -2,6 +2,7 @@
 
 This is a port of 3D Pinball - Space Cadet for Nintendo 3DS. It's originally a game that came bundled with Windows from Windows 95 up to Windows XP. This is the current state of the project:
 
+- It is compatible with 3D Pinball - Space Cadet and the Space Cadet table from [Full Tilt! Pinball](https://en.wikipedia.org/wiki/Full_Tilt!_Pinball). 
 - No menus, options, or results screen.
 - It plays sound effects and music (if the player supplies the music in OGG format).
 - There are still some bugs here and there.
@@ -55,8 +56,10 @@ After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, w
 3. Make sure you have your `dspfirm.cdc` in the `3ds` folder, as you will need it to have sound in homebrew games. If you don't have it, [dump your DSP](https://github.com/zoogie/DSP1/releases/latest).
 4. Inside the `3ds` folder, create a new folder named `SpaceCadetPinball`.
 5. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
-6. Copy all files from the original PC version into the `SpaceCadetPinball` folder that was created earlier.
-7. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
+6. Copy all files from the original PC version into the `SpaceCadetPinball` folder that was created earlier. For `Full Tilt! Pinball`, copy all the files and the `SOUND` folder that are located inside the `CADET` folder.
+7. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly:
+    - 3D Pinball - Space Cadet: name the file `PINBALL.ogg` and put it along the other assets in the `SpaceCadetPinball` folder.
+    - Full Tilt! Pinball: name the file `TABA1.ogg` and put it along the other sound files in the `SpaceCadetPinball/SOUND` folder.
 8. If everything went fine, you should be able to run the game from the Homebrew Launcher.
 
 ### Citra
@@ -65,11 +68,8 @@ After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, w
 2. Open it and go to the menu `File/Open Citra Folder`. This will open the folder where Citra's configuration is stored.
 3. Go to the `sdmc` folder and create a new folder there named `3ds` if it doesn't exist already.
 4. Enter the `3ds` folder and create an empty file there named `dspfirm.cdc`. This will allow to have audio in homebrew apps.
-5. Inside the `3ds` folder create another folder named `SpaceCadetPinball`.
-6. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
-7. Copy all PC game's assets to the `SpaceCadetPinball` folder that was created earlier.
-8. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `SpaceCadetPinball` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
-9. If everything went fine, you should be able to run the game.
+5. Follow steps 4, 5, 6 and 7 from the `3DS with Homebrew Launcher` section.
+6. If everything went fine, you should be able to run the game.
 
 ## How to play
 
