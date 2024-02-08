@@ -2,8 +2,8 @@
 <app version="1">
 	<name>3D Pinball Space Cadet</name>
 	<coder>PacoChan</coder>
-	<version>0.1</version>
-	<release_date>20211022000000</release_date>
+	<version>0.3</version>
+	<release_date>20240208000000</release_date>
 	<short_description>3D Pinball for Wii - Space Cadet</short_description>
 	<long_description>Port of the 3D Pinball - Space Cadet that came bundled with Windows from Windows 95 until Windows XP.
 
