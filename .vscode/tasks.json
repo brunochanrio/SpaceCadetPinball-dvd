@@ -4,14 +4,28 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build",
+            "label": "Build (GameCube)",
+            "type": "shell",
+            "command": "make -f Makefile.gc -j V=1",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean (GameCube)",
+            "type": "shell",
+            "command": "make -f Makefile.gc clean",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build (Wii)",
             "type": "shell",
             "command": "make -j V=1",
             "group": "build",
             "problemMatcher": []
         },
         {
-            "label": "Clean",
+            "label": "Clean (Wii)",
             "type": "shell",
             "command": "make clean",
             "group": "build",

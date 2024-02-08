@@ -1,6 +1,22 @@
 {
     "configurations": [
         {
+            "name": "GameCube",
+            "includePath": [
+                "${workspaceFolder}",
+                "${DEVKITPRO}/libogc/**",
+                "${DEVKITPRO}/portlibs/gamecube/include/**"
+            ],
+            "defines":
+            [
+                "BIG_ENDIAN",
+                "GEKKO",
+                "HW_DOL"
+            ],
+            "compilerPath": "${DEVKITPRO}/devkitPPC/bin/powerpc-eabi-g++",
+            "compilerArgs": []
+        },
+        {
             "name": "Wii",
             "includePath": [
                 "${workspaceFolder}",
@@ -10,9 +26,10 @@
             "defines":
             [
                 "BIG_ENDIAN",
+                "GEKKO",
                 "HW_RVL"
             ],
-            "compilerPath": "${DEVKITPRO}/devkitPPC/bin/powerpc-eabi-gcc",
+            "compilerPath": "${DEVKITPRO}/devkitPPC/bin/powerpc-eabi-g++",
             "compilerArgs": []
         }
     ],

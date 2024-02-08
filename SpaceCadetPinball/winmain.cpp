@@ -139,25 +139,17 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 		wii_input::ScanPads();
 
-		uint32_t wiiButtonsDown = wii_input::GetWiiButtonsDown(0);
-		uint32_t gcButtonsDown = wii_input::GetGCButtonsDown(0);
-		uint32_t wiiButtonsUp = wii_input::GetWiiButtonsUp(0);
-		uint32_t gcButtonsUp = wii_input::GetGCButtonsUp(0);
-
-		if ((wiiButtonsDown & WPAD_BUTTON_HOME) ||
-			(gcButtonsDown & PAD_TRIGGER_Z))
+		if (wii_input::Exit())
 			break;
 
-		if ((wiiButtonsDown & WPAD_BUTTON_PLUS) ||
-			(gcButtonsDown & PAD_BUTTON_START))
+		if (wii_input::Pause())
 			pause();
 
-		if ((wiiButtonsDown & WPAD_BUTTON_1) ||
-			(gcButtonsDown & PAD_BUTTON_Y))
+		if (wii_input::NewGame())
 			new_game();
 
-		pb::keydown(wiiButtonsDown, gcButtonsDown);
-		pb::keyup(wiiButtonsUp, gcButtonsUp);
+		pb::keydown();
+		pb::keyup();
 
 		if (!single_step)
 		{
@@ -291,10 +283,7 @@ void winmain::PrintFatalError(const char *message, ...)
 	{
 		wii_input::ScanPads();
 
-		uint32_t wiiButtonsDown = wii_input::GetWiiButtonsDown(0);
-		uint32_t gcButtonsDown = wii_input::GetGCButtonsDown(0);
-
-		if ((wiiButtonsDown & WPAD_BUTTON_A) || (gcButtonsDown & PAD_BUTTON_A))
+		if (wii_input::SkipError())
 			break;
 
 		VIDEO_Flush();
@@ -306,5 +295,5 @@ void winmain::PrintFatalError(const char *message, ...)
 	VIDEO_WaitVSync();
 
 	exit(EXIT_FAILURE);
-	//svcBreak(USERBREAK_ASSERT);
+	// svcBreak(USERBREAK_ASSERT);
 }
