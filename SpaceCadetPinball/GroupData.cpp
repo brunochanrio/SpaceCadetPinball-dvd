@@ -118,7 +118,7 @@ void GroupData::SplitSplicedBitmap(const gdrv_bitmap8& srcBmp, gdrv_bitmap8& bmp
 	auto srcChar = reinterpret_cast<char**>(&src);
 	for (int dstInd = 0;;)
 	{
-		auto stride = static_cast<int16_t>(*src++);
+		auto stride = static_cast<int16_t>(utils::swap_u16(*src++));
 		if (stride < 0)
 			break;
 
@@ -130,9 +130,9 @@ void GroupData::SplitSplicedBitmap(const gdrv_bitmap8& srcBmp, gdrv_bitmap8& bmp
 		}
 
 		dstInd += stride;
-		for (auto count = *src++; count; count--)
+		for (auto count = utils::swap_u16(*src++); count; count--)
 		{
-			auto depth = *src++;
+			auto depth = utils::swap_u16(*src++);
 			bmp.IndexedBmpPtr[dstInd] = **srcChar;
 			zMap.ZPtr1[dstInd] = depth;
 
