@@ -2,6 +2,7 @@
 
 This is a port of 3D Pinball - Space Cadet for Nintendo Wii. It's originally a game that came bundled with Windows from Windows 95 up to Windows XP. This is the current state of the project:
 
+- It is compatible with 3D Pinball - Space Cadet and the Space Cadet table from [Full Tilt! Pinball](https://en.wikipedia.org/wiki/Full_Tilt!_Pinball). 
 - No menus, options, or results screen.
 - Playable with the Wii remote and the GameCube pad.
 - It plays sound effects and music (if the player supplies the music in OGG format).
@@ -34,17 +35,16 @@ Even though devkitPro offers a Windows installer, I've had some issues setting i
 1. Open the terminal in the folder where you want to clone the project.
 2. Clone it with the command `git clone --branch wii https://github.com/MaikelChan/SpaceCadetPinball`. A subfolder called `SpaceCadetPinball` will be created containing the project.
 3. Move to that subfolder with `cd SpaceCadetPinball`.
-4. Download the latest version of the [custom devkitPro pacman](https://github.com/devkitPro/pacman/releases/tag/v1.0.2), that will be used to download the compilers and libraries to build the project. Once downloaded, put it in the `SpaceCadetPinball` folder.
-5. Install devkitPro pacman with this command: `sudo gdebi devkitpro-pacman.amd64.deb`. If gdebi is not found, install it with `sudo apt install gdebi-core`, and then try again installing pacman.
-6. Use the following command to sync pacman databases: `sudo dkp-pacman -Sy`.
-7. Now update packages with `sudo dkp-pacman -Syu`.
-8. Install the Wii development tools with `sudo dkp-pacman -S wii-dev`.
-9. Install SDL with `sudo dkp-pacman -S wii-sdl`.
-10. Install SDL_mixer with `sudo dkp-pacman -S wii-sdl_mixer`.
-11. Set the DEVKITPRO environment variables so the system knows where the compilers and libraries are installed with these commands:
+4. Follow the instructions to install the latest version of the [custom devkitPro pacman](https://devkitpro.org/wiki/devkitPro_pacman), that will be used to download the compilers and libraries to build the project.
+5. Use the following command to sync pacman databases: `sudo dkp-pacman -Sy`.
+6. Now update packages with `sudo dkp-pacman -Syu`.
+7. Install the Wii development tools with `sudo dkp-pacman -S wii-dev`.
+8. Install SDL with `sudo dkp-pacman -S wii-sdl`.
+9. Install SDL_mixer with `sudo dkp-pacman -S wii-sdl_mixer`.
+10. Set the DEVKITPRO environment variables so the system knows where the compilers and libraries are installed with these commands:
     - `export DEVKITPRO=/opt/devkitpro`.
     - `export DEVKITPPC=/opt/devkitpro/devkitPPC`.
-12. Build the project with the command `make -j4`.
+11. Build the project with the command `make -j`.
 
 After a successful build, you will get a file called `SpaceCadetPinball.dol`, which is the main executable.
 
@@ -57,7 +57,9 @@ After a successful build, you will get a file called `SpaceCadetPinball.dol`, wh
 3. Copy `boot.dol` to `apps/SpaceCadetPinball/` in your SD card.
 4. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
 5. Copy all PC game's assets to `apps/SpaceCadetPinball/Data/` in your SD card.
-6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format, and call the file `PINBALL.ogg`, and put it along the other assets in the `Data` folder. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly.
+6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly:
+    - 3D Pinball - Space Cadet: name the file `PINBALL.ogg` and put it along the other assets in the `Data` folder.
+    - Full Tilt! Pinball: name the file `TABA1.ogg` and put it along the other sound files in the `Data/SOUND` folder.
 7. If everything went fine, you should be able to see the game in your homebrew channel and run it.
 
 ### Dolphin
