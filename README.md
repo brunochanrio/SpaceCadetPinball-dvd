@@ -32,18 +32,17 @@ Even though devkitPro offers a Windows installer, I've had some issues setting i
 1. Open the terminal in the folder where you want to clone the project.
 2. Clone it with the command `git clone --branch 3ds https://github.com/MaikelChan/SpaceCadetPinball`. A subfolder called `SpaceCadetPinball` will be created containing the project.
 3. Move to that subfolder with `cd SpaceCadetPinball`.
-4. Download the latest version of the [custom devkitPro pacman](https://github.com/devkitPro/pacman/releases/tag/v1.0.2), that will be used to download the compilers and libraries to build the project. Once downloaded, put it in the `SpaceCadetPinball` folder.
-5. Install devkitPro pacman with this command: `sudo gdebi devkitpro-pacman.amd64.deb`. If gdebi is not found, install it with `sudo apt install gdebi-core`, and then try again installing pacman.
-6. Use the following command to sync pacman databases: `sudo dkp-pacman -Sy`.
-7. Now update packages with `sudo dkp-pacman -Syu`.
-8. Install the 3DS development tools with `sudo dkp-pacman -S 3ds-dev`.
-9. Install SDL with `sudo dkp-pacman -S 3ds-sdl`.
-10. Install SDL_mixer with `sudo dkp-pacman -S 3ds-sdl_mixer`.
-11. Set the DEVKITPRO environment variables so the system knows where the compilers and libraries are installed with these commands:
+4. Follow the instructions to install the latest version of the [custom devkitPro pacman](https://devkitpro.org/wiki/devkitPro_pacman), that will be used to download the compilers and libraries to build the project.
+5. Use the following command to sync pacman databases: `sudo dkp-pacman -Sy`.
+6. Now update packages with `sudo dkp-pacman -Syu`.
+7. Install the 3DS development tools with `sudo dkp-pacman -S 3ds-dev`.
+8. Install SDL with `sudo dkp-pacman -S 3ds-sdl`.
+9. Install SDL_mixer with `sudo dkp-pacman -S 3ds-sdl_mixer`.
+10. Set the DEVKITPRO environment variables so the system knows where the compilers and libraries are installed with these commands:
     - `export DEVKITPRO=/opt/devkitpro`.
     - `export DEVKITARM=/opt/devkitpro/devkitARM`.
-12. To generate Build the project with the command `make -j4`.
-13. Optionally, to generate a CIA file, you will need to have [bannertool](https://github.com/Steveice10/bannertool/releases/) and [makerom](https://github.com/3DSGuy/Project_CTR/releases) in the `$DEVKITPRO/tools/bin` folder. Then build the project with the command `make -j4 BUILD_CIA=1`.
+11. To generate Build the project with the command `make -j`.
+12. Optionally, to generate a CIA file, you will need to have [bannertool](https://github.com/Steveice10/bannertool/releases/) and [makerom](https://github.com/3DSGuy/Project_CTR/releases) in the `$DEVKITPRO/tools/bin` folder. Then build the project with the command `make -j BUILD_CIA=1`.
 
 After a successful build, you will get a file called `SpaceCadetPinball.3dsx`, which is the main executable.
 
