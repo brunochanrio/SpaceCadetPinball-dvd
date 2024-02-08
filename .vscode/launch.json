@@ -1,0 +1,33 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+
+    // Enable debugger in Dolphin and configure GDB port
+    // [Interface]
+    // DebugModeEnabled = True
+    // [General]
+    // GDBPort = 9090
+
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach GDB Server",
+            "type": "cppdbg",
+            "request": "launch",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/opt/devkitpro/devkitPPC/bin/powerpc-eabi-gdb",
+            "miDebuggerServerAddress": "192.168.8.129:9090",
+            "program": "SpaceCadetPinball.elf",
+            "cwd": "${workspaceRoot}",
+            "externalConsole": false,
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}
