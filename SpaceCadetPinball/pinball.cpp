@@ -238,7 +238,7 @@ char* pinball::get_rc_string(int uID, int a2)
 int pinball::get_rc_int(int uID, int* dst)
 {
 	char buffer[255];
-	int result = LoadStringAlt(uID, buffer, 255);
+	int result = LoadStringAlt(uID, buffer, 254);
 	if (!result)
 		return result;
 	*dst = atoi(buffer);

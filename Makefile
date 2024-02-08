@@ -80,7 +80,7 @@ CFLAGS	+=	$(INCLUDE) -D__3DS__
 CXXFLAGS	:= $(CFLAGS) -frtti -fno-exceptions -std=gnu++11
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -z noexecstack
 
 LIBS	:= -lSDL_mixer -lSDL -lmikmod -lmad -lvorbisidec -logg -lcitro3d -lctru -lm
 
