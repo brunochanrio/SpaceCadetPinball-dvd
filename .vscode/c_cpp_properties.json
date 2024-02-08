@@ -9,6 +9,7 @@
             ],
             "defines":
             [
+                "__gamecube__",
                 "BIG_ENDIAN",
                 "GEKKO",
                 "HW_DOL"
@@ -25,6 +26,7 @@
             ],
             "defines":
             [
+                "__wii__",
                 "BIG_ENDIAN",
                 "GEKKO",
                 "HW_RVL"
