@@ -56,7 +56,7 @@ After a successful build, you will get a file called `SpaceCadetPinball.dol`, wh
 2. Go to the `sd` folder in this repository, and copy its contents to the root of the SD card you use for loading apps for the Hombrew channel.
 3. Copy `boot.dol` to `apps/SpaceCadetPinball/` in your SD card.
 4. For legal reasons, you will need to get the original PC game on your own to obtain the assets like graphics and sound effects. Those are not contained in this repository.
-5. Copy all PC game's assets to `apps/SpaceCadetPinball/Data/` in your SD card.
+5. Copy all PC game's assets to `apps/SpaceCadetPinball/Data/` in your SD card. For `Full Tilt! Pinball`, copy all the files and the `SOUND` folder that are located inside the `CADET` folder.
 6. Optionally, since this port doesn't play MIDI files, you'll need to convert the music to ogg format. Make sure that the music has a sample rate no higher than 44100Hz, or it won't play correctly:
     - 3D Pinball - Space Cadet: name the file `PINBALL.ogg` and put it along the other assets in the `Data` folder.
     - Full Tilt! Pinball: name the file `TABA1.ogg` and put it along the other sound files in the `Data/SOUND` folder.
