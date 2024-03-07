@@ -10,7 +10,7 @@ This is a port of 3D Pinball - Space Cadet for Nintendo Wii. It's originally a g
 
 It is based on the PC decompilation made by [k4zmu2a](https://github.com/k4zmu2a): https://github.com/k4zmu2a/SpaceCadetPinball
 
-The PC decompilation uses SDL2 to render the game. This Wii port has been changed to use native GPU rendering with the GX library, as SDL for Wii is considered incomplete, doesn't use the GPU too much and it was really slow.
+The PC decompilation uses SDL2 to render the game. This Wii port has been changed to use native GPU rendering with the GX library.
 
 I also made the required changes to make the original game's binary assets work in this port. The Wii's CPU is big endian, instead of little endian like PC x86. These changes could be useful for porting to other big endian devices.
 
