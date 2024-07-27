@@ -31,7 +31,7 @@ jobs:
     - name: Copy Wii artifacts
       if: ${{ matrix.image == 'Wii' }}
       run: |
-        mkdir dist/PinballDVD
+        mkdir -p dist/PinballDVD
         cp SpaceCadetPinball-dvd.dol dist/PinballDVD/main.dol
 
     - name: Upload Wii artifacts
