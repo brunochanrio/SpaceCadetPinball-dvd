@@ -20,6 +20,8 @@ jobs:
     - name: Build Wii
       if: ${{ matrix.image == 'Wii' }}
       run: |
+        yes | sudo dkp-pacman -Sy
+        yes | sudo dkp-pacman -Syu
         yes | sudo dkp-pacman -S wii-sdl
         yes | sudo dkp-pacman -S wii-sdl_mixer
         make -f Makefile -j2
