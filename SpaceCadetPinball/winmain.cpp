@@ -39,7 +39,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 {
 	std::set_new_handler(memalloc_failure);
 
-	BasePath = (char *)"sd:/apps/SpaceCadetPinball/Data/";
+	BasePath = (char *)"dvd:/files/pinball/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
