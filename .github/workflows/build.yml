@@ -1,6 +1,7 @@
 name: SpaceCadetPinballDVD Build
 
-on: [push, pull_request]
+on: 
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,8 +23,8 @@ jobs:
       run: |
         yes | sudo dkp-pacman -Sy
         yes | sudo dkp-pacman -Syu
-        yes | sudo dkp-pacman -S wii-sdl
-        yes | sudo dkp-pacman -S wii-sdl_mixer
+        yes | sudo dkp-pacman -S wii-sdl2
+        yes | sudo dkp-pacman -S wii-sdl2_mixer
         make -f Makefile -j2
 
     - name: Copy Wii artifacts
