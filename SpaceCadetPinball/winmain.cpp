@@ -46,7 +46,7 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	// Set the base path for PINBALL.DAT
 
-	BasePath = (char *)"dvd:/DATA/files/pinball/";
+	BasePath = (char *)"dvd:/0 Data/files/pinball/";
 
 	pinball::quickFlag = 0; // strstr(lpCmdLine, "-quick") != nullptr;
 	DatFileName = options::get_string("Pinball Data", pinball::get_rc_string(168, 0));
