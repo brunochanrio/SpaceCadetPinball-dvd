@@ -20,8 +20,8 @@ jobs:
     - name: Build Wii
       if: ${{ matrix.image == 'Wii' }}
       run: |
-        sudo dkp-pacman -S wii-sdl
-        sudo dkp-pacman -S wii-sdl_mixer
+        y | sudo dkp-pacman -S wii-sdl
+        y | sudo dkp-pacman -S wii-sdl_mixer
         make -f Makefile -j2
 
     - name: Copy Wii artifacts
