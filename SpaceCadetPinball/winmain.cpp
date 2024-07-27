@@ -2,6 +2,7 @@
 #include "winmain.h"
 
 #include <malloc.h>
+#include <di/di.h>
 
 #include "control.h"
 #include "midi.h"
@@ -43,6 +44,10 @@ int winmain::WinMain(LPCSTR lpCmdLine)
 
 	wii_graphics::Initialize();
 	wii_input::Initialize();
+
+	// Initialize DI
+	DI_Init();
+	DI_Mount();
 
 	// Set the base path for PINBALL.DAT
 
