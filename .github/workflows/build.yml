@@ -48,7 +48,7 @@ jobs:
     if: github.ref == 'refs/heads/wii'
 
     steps:
-    - name: Checkout snes9xgx repo
+    - name: Checkout repo
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
@@ -61,7 +61,7 @@ jobs:
     - name: Re-zip artifacts
       run: |
         cd dist
-        zip -r PinballDVD.zip PinballDVF
+        zip -r PinballDVD.zip PinballDVD
         
     - name: Update Git Tag
       run: |
